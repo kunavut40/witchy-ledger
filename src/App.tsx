@@ -1,3 +1,7 @@
+import QuickSettings, { readQuick } from "./QuickSettings";
+import MobileHome from "./MobileHome";
+import InteractionFeedback from "./InteractionFeedback";
+import CategoryPicker from "./CategoryPicker";
 import QuickMenu from "./QuickMenu";
 import {
   FantasySettings,
@@ -415,6 +419,8 @@ export default function App() {
   return (
     <div
       className="app-shell"
+      data-decoration={readQuick(s).theme}
+      data-page={page}
       data-theme={scene}
       data-palette={
         s.settings.find((x) => x.id === "appearance.palette")?.value ||
@@ -512,6 +518,9 @@ export default function App() {
           </div>
         </header>
         <main className="content">
+          {page === "dashboard" && (
+            <MobileHome s={s} period={p} open={() => setPage("transactions")} />
+          )}
           <div className="page-heading">
             <div>
               <span className="eyebrow">A LITTLE MAGIC, EVERY DAY</span>
@@ -1390,6 +1399,7 @@ export default function App() {
               </section>
             </div>
           )}
+          {page === "settings" && <QuickSettings s={s} act={act} />}
           {page === "settings" && (
             <section className="card settings-card">
               <FantasySettings s={s} />
@@ -1527,15 +1537,44 @@ export default function App() {
             ))}
         </select>
       </nav>
-      {quickAdd && <QuickMenu close={()=>setQuickAdd(false)} choose={(kind,id,amount)=>{
-        setQuickAdd(false);
-        const category=s.categories.find(c=>c.id===id && !c.archived);
-        const account=s.accounts.find(a=>a.active && a.id==="cash") || s.accounts.find(a=>a.active);
-        const t={...emptyTx(),kind,categoryId:category?.id||"",accountId:account?.id||"",amount:(amount||0)*100};
-        menuSound("equip",fantasy.muted);
-        if(amount && category && account) void act(()=>saveTransaction({...t,title:category.name,tags:"#"+category.name,time:new Date().toTimeString().slice(0,5)}),"บันทึก "+category.name+" "+amount+" บาทแล้ว");
-        else setModal({type:"transaction",value:t});
-      }}/>}
+      <InteractionFeedback muted={fantasy.muted} />
+      {quickAdd && (
+        <QuickMenu
+          config={readQuick(s)}
+          categories={s.categories}
+          muted={fantasy.muted}
+          close={() => setQuickAdd(false)}
+          choose={(kind, id, amount) => {
+            setQuickAdd(false);
+            const category = s.categories.find(
+              (c) => c.id === id && !c.archived,
+            );
+            const account =
+              s.accounts.find((a) => a.active && a.id === "cash") ||
+              s.accounts.find((a) => a.active);
+            const t = {
+              ...emptyTx(),
+              kind,
+              categoryId: category?.id || "",
+              accountId: account?.id || "",
+              amount: (amount || 0) * 100,
+            };
+            menuSound("equip", fantasy.muted);
+            if (amount && category && account)
+              void act(
+                () =>
+                  saveTransaction({
+                    ...t,
+                    title: category.name,
+                    tags: "#" + category.name,
+                    time: new Date().toTimeString().slice(0, 5),
+                  }),
+                "บันทึก " + category.name + " " + amount + " บาทแล้ว",
+              );
+            else setModal({ type: "transaction", value: t });
+          }}
+        />
+      )}
       {showProfile && (
         <Profile
           settings={s.settings}
@@ -1617,7 +1656,8 @@ function Editor({
   const [accountKind, setAccountKind] = useState(
     modal.type === "account" ? modal.value?.kind || "bank" : "bank",
   );
-  const categoryName=s.categories.find(c=>c.id===(subCat||mainCat))?.name || "";
+  const categoryName =
+    s.categories.find((c) => c.id === (subCat || mainCat))?.name || "";
   const formId = "editor-form";
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -1657,6 +1697,14 @@ function Editor({
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (busy) return;
+    if (
+      modal.type === "transaction" &&
+      ["income", "expense"].includes(kind) &&
+      !mainCat
+    ) {
+      setWarning("กรุณาเลือกหมวดหลัก");
+      return;
+    }
     setBusy(true);
     const f = new FormData(e.currentTarget);
     const str = (k: string) => String(f.get(k) || "").trim();
@@ -1666,19 +1714,31 @@ function Editor({
           ...(tx || emptyTx()),
           kind: kind as Transaction["kind"],
           amount: satang(str("amount")),
-          title: str("note").slice(0,200) || tx?.title || categoryName || "รายการบัญชี",
+          title:
+            str("note").slice(0, 200) ||
+            tx?.title ||
+            categoryName ||
+            "รายการบัญชี",
           date: str("date"),
-          time: tx?.time || new Date().toTimeString().slice(0,5),
+          time: tx?.time || new Date().toTimeString().slice(0, 5),
           accountId: str("accountId"),
           toAccountId: kind === "transfer" ? str("toAccountId") : "",
           categoryId: ["income", "expense"].includes(kind)
             ? subCat || mainCat
             : "",
           note: str("note"),
-          tags: Array.from(new Set([...(tx?.tags||"").split(" "),categoryName?"#"+categoryName:""].filter(Boolean))).join(" "),
+          tags: Array.from(
+            new Set(
+              [
+                ...(tx?.tags || "").split(" "),
+                categoryName ? "#" + categoryName : "",
+              ].filter(Boolean),
+            ),
+          ).join(" "),
           recurring: f.has("recurring"),
         };
         await saveTransaction(t);
+        menuSound("equip", readFantasy(s).muted);
       }
       if (modal.type === "account") {
         const a: Account = {
@@ -1872,7 +1932,7 @@ function Editor({
                   <span>฿</span>
                   <input
                     name="amount"
-                    inputMode={kind==="adjustment"?"decimal":"numeric"}
+                    inputMode={kind === "adjustment" ? "decimal" : "numeric"}
                     required
                     placeholder="0"
                     defaultValue={tx?.amount ? String(tx.amount / 100) : ""}
@@ -1886,7 +1946,30 @@ function Editor({
                   เครื่องหมายบวกคือเพิ่มหนี้
                 </p>
               )}
-              {kind==="expense" && categoryName && <div className="suggested-prices">ราคาแนะนำ {(categoryName.includes("กาแฟ")?[20,25,30]:categoryName.includes("น้ำมัน")?[120,300,500]:[40,45,50]).map(n=><button key={n} type="button" onClick={e=>{const input=e.currentTarget.form?.elements.namedItem("amount") as HTMLInputElement;if(input)input.value=String(n)}}>{n}</button>)}</div>}
+              {kind === "expense" && categoryName && (
+                <div className="suggested-prices">
+                  ราคาแนะนำ{" "}
+                  {(categoryName.includes("กาแฟ")
+                    ? [20, 25, 30]
+                    : categoryName.includes("น้ำมัน")
+                      ? [120, 300, 500]
+                      : [40, 45, 50]
+                  ).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.form?.elements.namedItem(
+                          "amount",
+                        ) as HTMLInputElement;
+                        if (input) input.value = String(n);
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="form-grid">
                 <label>
                   วันที่
@@ -1899,57 +1982,56 @@ function Editor({
                 </label>
               </div>
               {["income", "expense"].includes(kind) && (
-                <div className="form-grid">
-                  <label>
-                    หมวดหลัก
-                    <select
-                      required
-                      value={mainCat}
-                      onChange={(e) => {
-                        setMainCat(e.target.value);
-                        setSubCat("");
-                      }}
-                    >
-                      <option value="">เลือกหมวดหมู่</option>
-                      {s.categories
-                        .filter(
-                          (c) =>
-                            !c.parentId &&
-                            c.kind === kind &&
-                            (!c.archived || c.id === mainCat),
-                        )
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <label>
-                    หมวดย่อย
-                    <select
-                      value={subCat}
-                      onChange={(e) => setSubCat(e.target.value)}
-                    >
-                      <option value="">ใช้หมวดหลัก</option>
-                      {s.categories
-                        .filter(
-                          (c) =>
-                            !!mainCat &&
-                            c.parentId === mainCat &&
-                            (!c.archived || c.id === subCat),
-                        )
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                </div>
+                <CategoryPicker
+                  categories={s.categories}
+                  kind={kind}
+                  main={mainCat}
+                  sub={subCat}
+                  onChange={(m, c) => {
+                    setMainCat(m);
+                    setSubCat(c);
+                  }}
+                  onAdd={() => {
+                    const name = window.prompt("ชื่อหมวดใหม่");
+                    if (!name?.trim()) return;
+                    void act(async () => {
+                      const id = uid();
+                      await db.categories.add({
+                        id,
+                        name: name.trim(),
+                        parentId: mainCat,
+                        kind: kind as "income" | "expense",
+                        icon: "book",
+                        color: "#bba0d0",
+                        archived: false,
+                        order: s.categories.length,
+                      });
+                      if (mainCat) setSubCat(id);
+                      else setMainCat(id);
+                    }, "เพิ่มหมวดแล้ว");
+                  }}
+                />
               )}
               <div className="form-grid">
-                <fieldset className="account-orbs"><legend>{kind==="transfer"?"บัญชีต้นทาง":"บัญชี"}</legend>{accountOptions().map(o=><label key={o.key}><input type="radio" required name="accountId" value={o.props.value} defaultChecked={o.props.value===(tx?.accountId||"bank")}/><span>{s.accounts.find(a=>a.id===o.props.value)?.name}</span></label>)}</fieldset>
+                <fieldset className="account-orbs">
+                  <legend>{kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}</legend>
+                  {accountOptions().map((o) => (
+                    <label key={o.key}>
+                      <input
+                        type="radio"
+                        required
+                        name="accountId"
+                        value={o.props.value}
+                        defaultChecked={
+                          o.props.value === (tx?.accountId || "bank")
+                        }
+                      />
+                      <span>
+                        {s.accounts.find((a) => a.id === o.props.value)?.name}
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
                 {kind === "transfer" && (
                   <label>
                     บัญชีปลายทาง

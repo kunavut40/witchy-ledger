@@ -1,11 +1,14 @@
-param([string]$Tools = (Join-Path $PSScriptRoot '..\..\..\work\android-tools'))
+param(
+ [Parameter(Mandatory=$true)][string]$Jdk,
+ [Parameter(Mandatory=$true)][string]$BuildTools,
+ [Parameter(Mandatory=$true)][string]$AndroidJar,
+ [string]$KeyStore=(Join-Path $env:USERPROFILE '.android/debug.keystore')
+)
 $ErrorActionPreference='Stop'
-$jdk=(Get-ChildItem -LiteralPath (Join-Path $Tools 'jdk') -Directory | Select-Object -First 1).FullName
-$buildTools=Join-Path $Tools 'buildtools\android-15'
-$androidJar=Join-Path $Tools 'platform\android-35\android.jar'
-$androidClasses=Join-Path $Tools 'android-classpath'
-if(!(Test-Path -LiteralPath $androidClasses)){Add-Type -AssemblyName System.IO.Compression.FileSystem;[IO.Compression.ZipFile]::ExtractToDirectory($androidJar,$androidClasses)}
-$stage=Join-Path $Tools 'apk-build'
+$stage=Join-Path $env:TEMP ("witchy-build-"+[guid]::NewGuid())
+New-Item -ItemType Directory -Force $stage | Out-Null
+$manifest=(Get-Content -Raw (Join-Path $PSScriptRoot 'AndroidManifest.xml')).Replace('package="app.witchyledger.offline"','package="app.witchyledger.preview"').Replace('android:name=".MainActivity"','android:name="app.witchyledger.offline.MainActivity"').Replace('android:versionCode="5"','android:versionCode="6"').Replace('android:versionName="0.5.0-test"','android:versionName="0.6.0"').Replace('android:label="Witchy Ledger"','android:label="Witchy Ledger Preview"')
+$manifest | Set-Content (Join-Path $stage 'AndroidManifest.xml') -Encoding utf8
 $assets=Join-Path $stage 'assets\www'
 $classes=Join-Path $stage 'classes'
 $dex=Join-Path $stage 'dex'
@@ -17,7 +20,7 @@ Set-Content -LiteralPath (Join-Path $assets 'index.html') -Value $html -Encoding
 function Run([string]$Executable,[string[]]$Arguments){& $Executable @Arguments;if($LASTEXITCODE -ne 0){throw "Build command failed: $Executable"}}
 Run (Join-Path $jdk 'bin\javac.exe') @('-encoding','UTF-8','-source','8','-target','8','-classpath',$androidJar,'-d',$classes,(Join-Path $PSScriptRoot 'MainActivity.java'))
 Run (Join-Path $buildTools 'aapt2.exe') @('compile','--dir',(Join-Path $PSScriptRoot 'res'),'-o',(Join-Path $stage 'resources.zip'))
-Run (Join-Path $buildTools 'aapt2.exe') @('link','-I',$androidJar,'--manifest',(Join-Path $PSScriptRoot 'AndroidManifest.xml'),'-A',(Join-Path $stage 'assets'),'--min-sdk-version','30','--target-sdk-version','35','-o',(Join-Path $stage 'unsigned.apk'),(Join-Path $stage 'resources.zip'))
+Run (Join-Path $buildTools 'aapt2.exe') @('link','-I',$androidJar,'--manifest',(Join-Path $stage 'AndroidManifest.xml'),'-A',(Join-Path $stage 'assets'),'--min-sdk-version','30','--target-sdk-version','35','-o',(Join-Path $stage 'unsigned.apk'),(Join-Path $stage 'resources.zip'))
 $classFiles=@(Get-ChildItem -LiteralPath $classes -Recurse -Filter '*.class' | Select-Object -ExpandProperty FullName)
 Run (Join-Path $jdk 'bin\java.exe') (@('-cp',(Join-Path $buildTools 'lib\d8.jar'),'com.android.tools.r8.D8','--lib',$androidJar,'--min-api','30','--output',$dex)+$classFiles)
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -29,10 +32,10 @@ try{
  [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip,(Join-Path $dex 'classes.dex'),'classes.dex') | Out-Null
 }finally{$zip.Dispose()}
 Run (Join-Path $buildTools 'zipalign.exe') @('-f','4',(Join-Path $stage 'unsigned.apk'),(Join-Path $stage 'aligned.apk'))
-$key=Join-Path $Tools 'witchy-test.jks'
-if(!(Test-Path -LiteralPath $key)){Run (Join-Path $jdk 'bin\keytool.exe') @('-genkeypair','-keystore',$key,'-storepass','android','-keypass','android','-alias','witchytest','-keyalg','RSA','-keysize','2048','-validity','10000','-dname','CN=Witchy Ledger Local Test')}
-$output=Join-Path $PSScriptRoot '..\..\WitchyLedger-S25-test.apk'
-Run (Join-Path $jdk 'bin\java.exe') @('-jar',(Join-Path $buildTools 'lib\apksigner.jar'),'sign','--ks',$key,'--ks-pass','pass:android','--key-pass','pass:android','--out',$output,(Join-Path $stage 'aligned.apk'))
+$key=$KeyStore
+if(!(Test-Path -LiteralPath $key)){throw 'Signing key not found'}
+$output=Join-Path $PSScriptRoot '..\WitchyLedger-Preview.apk'
+Run (Join-Path $jdk 'bin\java.exe') @('-jar',(Join-Path $buildTools 'lib\apksigner.jar'),'sign','--ks',$key,'--ks-key-alias','androiddebugkey','--ks-pass','pass:android','--key-pass','pass:android','--out',$output,(Join-Path $stage 'aligned.apk'))
 Run (Join-Path $jdk 'bin\java.exe') @('-jar',(Join-Path $buildTools 'lib\apksigner.jar'),'verify','--verbose',$output)
 Run (Join-Path $buildTools 'aapt.exe') @('dump','badging',$output)
 Get-FileHash -Algorithm SHA256 -LiteralPath $output
