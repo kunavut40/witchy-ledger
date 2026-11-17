@@ -2542,3 +2542,343 @@ td > small {
     animation: none !important;
   }
 }
+/* Fantasy extension: account typography and computation remain unchanged. */
+.app-shell[data-fantasy="off"] .welcome-strip {
+  background-image: none;
+  background: #f2edf8;
+}
+.app-shell[data-fantasy="off"] .welcome-strip h2 {
+  color: #716080;
+  text-shadow: none;
+}
+.app-shell[data-fantasy="off"] .welcome-strip p {
+  color: #9789a5;
+}
+.app-shell[data-fantasy="off"] .welcome-tag {
+  color: #9884b1;
+}
+.app-shell[data-fantasy="on"] {
+  --theme-wash: #211c25;
+  --theme-accent: #a47b4c;
+  color: #e4d5bf;
+}
+.app-shell[data-fantasy="on"] .main-shell {
+  background:
+    linear-gradient(#211c25e8, #211c25f5),
+    url("/attic.png") center/cover fixed;
+}
+.app-shell[data-fantasy="on"] .sidebar,
+.app-shell[data-fantasy="on"] .topbar {
+  background: #26202b;
+  border-color: #5b455a;
+}
+.app-shell[data-fantasy="on"] .card,
+.app-shell[data-fantasy="on"] .stat-card:not(.balance-card),
+.app-shell[data-fantasy="on"] .period-bar {
+  background: #302735ed;
+  border-color: #5a4356;
+  color: #e3d6bd;
+}
+.app-shell[data-fantasy="on"] .period-bar select {
+  color: #cdb593;
+}
+.app-shell[data-fantasy="on"] .welcome-strip {
+  background-image:
+    linear-gradient(90deg, #211923e8, #21192322), url("/attic.png");
+  background-size:
+    100% 100%,
+    cover;
+  background-position: center;
+}
+.app-shell[data-fantasy="on"] .nav-item.active {
+  background: #b38a4b25;
+  color: #d7b275;
+}
+.app-shell[data-fantasy="on"] .progress-banner {
+  background: #322737;
+  border-color: #6d5260;
+}
+.app-shell[data-fantasy="on"] .progress-banner strong {
+  color: #e2bd80;
+}
+.app-shell[data-fantasy="on"] .mobile-nav {
+  background: #28212df5;
+  border-color: #6c4e5d;
+}
+.fantasy-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 24px;
+}
+.fantasy-settings h3 {
+  color: #a98554;
+}
+.attic-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.5;
+  background: #29202c url("/attic.png") center/cover;
+  border: 2px solid #9a7449;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 22px;
+  image-rendering: pixelated;
+}
+.attic-label {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  color: #e8cb94;
+  background: #201a23d9;
+  padding: 12px 16px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  border-radius: 8px;
+}
+.attic-label small {
+  display: block;
+  margin-top: 6px;
+  letter-spacing: 0;
+  font-size: 12px;
+}
+.room-companion {
+  position: absolute;
+  bottom: 5%;
+  left: 43%;
+  filter: drop-shadow(0 8px 4px #0006);
+}
+.furniture-slots {
+  position: absolute;
+  bottom: 3%;
+  left: 4%;
+  display: flex;
+  gap: 15px;
+}
+.furniture-slots span {
+  font-size: 26px;
+  filter: drop-shadow(0 3px #0005);
+}
+.wardrobe-panel {
+  background: #2a222f !important;
+  color: #ddc5a0;
+}
+.wardrobe-tabs {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.wardrobe-tabs button {
+  padding: 10px;
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+}
+.wardrobe-tabs button.selected {
+  border-color: #d7ac6a;
+  color: #e4bf84;
+}
+.wardrobe-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.wardrobe-grid button {
+  flex-direction: column;
+  padding: 12px 6px;
+  border: 1px solid #63465c;
+  border-radius: 9px;
+  background: #3a2c40;
+  color: #dcc19a;
+  gap: 8px;
+}
+.wardrobe-grid button.selected {
+  border-color: #e3b774;
+  background: #594052;
+}
+.wardrobe-grid b {
+  font-size: 10px;
+}
+.wardrobe-grid small {
+  font-size: 9px;
+  color: #c2a4bd;
+}
+.accessory-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 15px 0;
+}
+.accessory-controls label {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  font-size: 12px;
+}
+.accessory-controls select {
+  padding: 9px;
+  border-radius: 6px;
+  background: #4a364e;
+  color: #ebd3ab;
+}
+.furniture-symbol {
+  font-size: 40px;
+  padding: 15px;
+}
+.companion-sprite {
+  image-rendering: pixelated;
+  overflow: visible;
+}
+.companion-idle {
+  animation: companion-breathe 3s ease-in-out infinite;
+}
+.companion-eyes {
+  animation: companion-blink 5s infinite;
+}
+.companion-mouth {
+  transform-origin: 32px 36px;
+}
+.is-talking .companion-mouth {
+  animation: companion-talk 0.24s steps(3) infinite;
+}
+.emotion-happy .companion-idle {
+  animation: companion-breathe 1s infinite;
+}
+.companion-widget {
+  position: fixed;
+  bottom: 20px;
+  left: 255px;
+  display: flex;
+  align-items: flex-end;
+  max-width: 350px;
+  z-index: 45;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 10px #0005);
+}
+.companion-widget > * {
+  pointer-events: auto;
+}
+.dialogue-bubble {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: #f4e5cc;
+  color: #493444;
+  border: 2px solid #b98c58;
+  border-radius: 12px;
+  padding: 12px 15px;
+  gap: 8px;
+  font-size: 12px;
+  min-height: 90px;
+  max-width: 245px;
+}
+.dialogue-bubble b {
+  color: #8c5d5d;
+}
+.dialogue-bubble i {
+  float: right;
+  font-style: normal;
+  color: #b78d62;
+}
+.companion-hide {
+  position: absolute;
+  right: 0;
+  top: -15px;
+  background: #3a293b;
+  color: #e3bf8b;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+}
+.summon-companion {
+  position: fixed;
+  bottom: 20px;
+  left: 255px;
+  z-index: 45;
+  background: #3a2b40;
+  border: 1px solid #b58b5d;
+  color: #e1ba7c;
+  padding: 10px 15px;
+  border-radius: 25px;
+  font-size: 12px;
+}
+@keyframes companion-breathe {
+  50% {
+    transform: translateY(-1px);
+  }
+}
+@keyframes companion-blink {
+  0%,
+  94%,
+  98%,
+  100% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0;
+  }
+}
+@keyframes companion-talk {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(2.5);
+  }
+}
+@media (max-width: 700px) {
+  .attic-scene {
+    aspect-ratio: 1;
+  }
+  .room-companion {
+    left: 40%;
+    bottom: 0;
+  }
+  .room-companion svg {
+    width: 120px;
+    height: 162px;
+  }
+  .wardrobe-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .companion-widget {
+    left: 8px;
+    bottom: 91px;
+    max-width: 285px;
+  }
+  .companion-widget > .companion-sprite {
+    width: 65px;
+    height: 88px;
+  }
+  .dialogue-bubble {
+    font-size: 11px;
+    max-width: 210px;
+    padding: 9px 11px;
+    min-height: 80px;
+  }
+  .summon-companion {
+    left: 12px;
+    bottom: 91px;
+  }
+  .furniture-slots {
+    gap: 7px;
+  }
+  .furniture-slots span {
+    font-size: 20px;
+  }
+  .attic-label {
+    font-size: 8px;
+    padding: 8px;
+  }
+  .attic-label small {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .companion-idle,
+  .companion-eyes,
+  .is-talking .companion-mouth {
+    animation: none !important;
+  }
+}

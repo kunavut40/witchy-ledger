@@ -1,3 +1,10 @@
+import {
+  FantasySettings,
+  FantasyRoom,
+  CompanionWidget,
+  readFantasy,
+} from "./fantasy/Fantasy";
+import { menuSound } from "./fantasy/sound";
 import { ProgressBanner } from "./Adventure";
 import { progression } from "./progression";
 import Profile, { Character, getProfile } from "./Profile";
@@ -33,6 +40,8 @@ import {
   Target,
   CreditCard,
   Coins,
+  BedDouble,
+  Shirt,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -89,6 +98,8 @@ const nav = [
   ["savings", "เงินออม", Coins],
   ["debts", "หนี้สิน / บัตรเครดิต", CreditCard],
   ["backup", "สำรองข้อมูล", Database],
+  ["room", "ห้องของยูอิ", BedDouble],
+  ["wardrobe", "แต่งตัว", Shirt],
   ["settings", "ตั้งค่า", Settings],
 ] as const;
 const kindLabels: Record<string, string> = {
@@ -128,6 +139,10 @@ const emptyTx = (): Transaction => ({
   createdAt: new Date().toISOString(),
 });
 function download(content: string, name: string, type = "application/json") {
+  if (window.WitchyNative) {
+    window.WitchyNative.exportFile(name, content, type);
+    return;
+  }
   const url = URL.createObjectURL(new Blob([content], { type }));
   const a = document.createElement("a");
   a.href = url;
@@ -153,7 +168,14 @@ export default function App() {
     [pending, setPending] = useState<State | null>(null);
   useEffect(() => {
     initialize()
-      .then(() => setReady(true))
+      .then(async () => {
+        if (window.WitchyNative && !(await db.settings.get("fantasy.state")))
+          await db.settings.put({
+            id: "fantasy.state",
+            value: JSON.stringify({ mode: true }),
+          });
+        setReady(true);
+      })
       .catch((e) => setError("เปิดฐานข้อมูลไม่ได้: " + e.message));
     const on = () => setOnline(navigator.onLine);
     addEventListener("online", on);
@@ -194,6 +216,7 @@ export default function App() {
     );
   const s: State = liveState;
   const profile = getProfile(s.settings);
+  const fantasy = readFantasy(s);
   const player = progression(s.transactions);
   const scene =
     s.settings.find((x) => x.id === "appearance.theme")?.value || "academy";
@@ -388,7 +411,21 @@ export default function App() {
     );
   }
   return (
-    <div className="app-shell" data-theme={scene}>
+    <div
+      className="app-shell"
+      data-theme={scene}
+      data-fantasy={fantasy.mode ? "on" : "off"}
+      onClickCapture={(e) => {
+        const target = (e.target as HTMLElement).closest(
+          ".nav-item,.hero-picker button,.icon-picker button",
+        );
+        if (target)
+          menuSound(
+            target.matches(".hero-picker button") ? "character" : "select",
+            fantasy.muted,
+          );
+      }}
+    >
       <aside className="sidebar">
         <a
           className="brand"
@@ -428,7 +465,7 @@ export default function App() {
           <div className="local-label">
             <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
           </div>
-          <small>Witchy Ledger · v0.2.0</small>
+          <small>Witchy Ledger · v0.4.0-test</small>
         </div>
       </aside>
       <div className="main-shell">
@@ -1346,6 +1383,7 @@ export default function App() {
           )}
           {page === "settings" && (
             <section className="card settings-card">
+              <FantasySettings s={s} />
               <h3>สมุดบัญชีที่เป็นของคุณ</h3>
               <button
                 className="soft-button"
@@ -1420,6 +1458,9 @@ export default function App() {
               </p>
             </section>
           )}
+          {(page === "room" || page === "wardrobe") && (
+            <FantasyRoom s={s} wardrobe={page === "wardrobe"} />
+          )}
           <footer className="main-footer">
             <span>
               <ShieldCheck size={13} /> เก็บไว้ในเครื่อง เป็นส่วนตัวเสมอ
@@ -1462,6 +1503,7 @@ export default function App() {
           act={act}
         />
       )}
+      {page === "dashboard" && <CompanionWidget s={s} />}
       <Confirm />
       {notice && (
         <div className="toast" role="status">
