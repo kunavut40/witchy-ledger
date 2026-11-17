@@ -152,6 +152,7 @@ function download(content: string, name: string, type = "application/json") {
 }
 export default function App() {
   const [showProfile, setShowProfile] = useState(false);
+  const [quickAdd, setQuickAdd] = useState(false);
   const [page, setPage] = useState("dashboard"),
     [periodId, setPeriodId] = useState(""),
     [modal, setModal] = useState<Modal>(null),
@@ -414,6 +415,11 @@ export default function App() {
     <div
       className="app-shell"
       data-theme={scene}
+      data-palette={
+        s.settings.find((x) => x.id === "appearance.palette")?.value ||
+        "lavender"
+      }
+      data-eye={fantasy.eyeColor || "pink"}
       data-fantasy={fantasy.mode ? "on" : "off"}
       onClickCapture={(e) => {
         const target = (e.target as HTMLElement).closest(
@@ -465,15 +471,17 @@ export default function App() {
           <div className="local-label">
             <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
           </div>
-          <small>Witchy Ledger · v0.4.0-test</small>
+          <small>Witchy Ledger · v0.5.0-test</small>
         </div>
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <span className="breadcrumb">
-            สมุดบัญชีของฉัน <ChevronRight size={14} />{" "}
-            <b>{nav.find((n) => n[0] === page)?.[1]}</b>
-          </span>
+          <button className="mobile-brand" onClick={() => setPage("dashboard")}>
+            <img src="/yui-icon.png" alt="" />
+            <span>
+              Witchy Ledger<small>YOUR LITTLE MONEY GRIMOIRE</small>
+            </span>
+          </button>
           <div className="top-actions">
             <span className="offline-pill">
               <i />
@@ -1471,30 +1479,92 @@ export default function App() {
           </footer>
         </main>
       </div>
-      <nav className="mobile-nav">
-        {nav.slice(0, 5).map(([id, label, Icon]) => (
-          <button
-            key={id}
-            className={page === id ? "active" : ""}
-            onClick={() => setPage(id)}
-          >
-            <Icon size={20} />
-            <span>{label}</span>
-          </button>
-        ))}
+      <nav className="mobile-nav refreshed-nav">
+        <button
+          onClick={() => setPage("dashboard")}
+          className={page === "dashboard" ? "active" : ""}
+        >
+          <LayoutDashboard size={21} />
+          <span>หน้าหลัก</span>
+        </button>
+        <button onClick={() => setPage("transactions")}>
+          <ArrowRightLeft size={21} />
+          <span>รายการ</span>
+        </button>
+        <button
+          className="central-add"
+          aria-label={quickAdd ? "ปิดเพิ่มรายการ" : "เพิ่มรายรับหรือรายจ่าย"}
+          aria-expanded={quickAdd}
+          onClick={() => {
+            setQuickAdd(!quickAdd);
+            menuSound("equip", fantasy.muted);
+          }}
+        >
+          <Plus
+            size={30}
+            style={{ transform: quickAdd ? "rotate(45deg)" : "" }}
+          />
+        </button>
+        <button onClick={() => setPage("room")}>
+          <BedDouble size={21} />
+          <span>ห้องยูอิ</span>
+        </button>
         <select
           aria-label="เมนูเพิ่มเติม"
-          value={nav.slice(5).some((n) => n[0] === page) ? page : ""}
+          value=""
           onChange={(e) => e.target.value && setPage(e.target.value)}
         >
           <option value="">เพิ่มเติม</option>
-          {nav.slice(5).map(([id, label]) => (
-            <option key={id} value={id}>
-              {label}
-            </option>
-          ))}
+          {nav
+            .filter(
+              (n) => !["dashboard", "transactions", "room"].includes(n[0]),
+            )
+            .map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
         </select>
       </nav>
+      {quickAdd && (
+        <div className="quick-add-scrim" onClick={() => setQuickAdd(false)}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="เลือกประเภทรายการ"
+            className="quick-add-options"
+          >
+            <button
+              className="quick-income"
+              onClick={() => {
+                setQuickAdd(false);
+                setModal({
+                  type: "transaction",
+                  value: { ...emptyTx(), kind: "income" },
+                });
+                menuSound("equip", fantasy.muted);
+              }}
+            >
+              <ArrowDownRight size={36} />
+              <b>รายรับ</b>
+            </button>
+            <button
+              className="quick-expense"
+              onClick={() => {
+                setQuickAdd(false);
+                setModal({
+                  type: "transaction",
+                  value: { ...emptyTx(), kind: "expense" },
+                });
+                menuSound("equip", fantasy.muted);
+              }}
+            >
+              <ArrowUpRight size={36} />
+              <b>รายจ่าย</b>
+            </button>
+          </section>
+        </div>
+      )}
       {showProfile && (
         <Profile
           settings={s.settings}
@@ -1758,7 +1828,10 @@ function Editor({
     if (result) close();
   }
   const title = {
-    transaction: tx ? "แก้ไขรายการ" : "บันทึกเรื่องราวการเงิน",
+    transaction:
+      tx && s.transactions.some((t) => t.id === tx.id)
+        ? "แก้ไขรายการ"
+        : "บันทึกเรื่องราวการเงิน",
     account: modal.value ? "แก้ไขบัญชี" : "เพิ่มบัญชีของฉัน",
     category: modal.value ? "แก้ไขหมวดหมู่" : "สร้างหมวดหมู่",
     period: modal.value ? "แก้ไข / สร้างรอบถัดไป" : "สร้างรอบบัญชี",

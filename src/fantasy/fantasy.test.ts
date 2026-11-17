@@ -37,7 +37,9 @@ it("เปิดปิดโหมดและรูปลักษณ์อย�
     d.close();
     await d.open();
     const after = await readState(d);
-    expect(after.accounts.slice().sort((a,b)=>a.id.localeCompare(b.id))).toEqual(s.accounts.slice().sort((a,b)=>a.id.localeCompare(b.id)));
+    expect(
+      after.accounts.slice().sort((a, b) => a.id.localeCompare(b.id)),
+    ).toEqual(s.accounts.slice().sort((a, b) => a.id.localeCompare(b.id)));
     expect(after.transactions).toEqual(s.transactions);
     expect(after.periods).toEqual(s.periods);
     const backup = parseBackup(backupData(after));
@@ -72,4 +74,3 @@ it("ข้อมูลรูปลักษณ์เสียใช้ค่า�
   expect(parseFantasy('{"hair":100,"outfit":-1}').hair).toBe(0);
   expect(financialMood(initialState()).event).toBe("welcome");
 });
-

@@ -11,6 +11,8 @@ export type Emotion =
   | "surprised";
 export type CompanionId = "yui" | "momo";
 export interface FantasyState {
+  eyeColor?: string;
+  place?: string;
   mode: boolean;
   character: CompanionId;
   hair: number;

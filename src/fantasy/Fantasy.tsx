@@ -1,3 +1,4 @@
+import { eyeColors } from "../Palette";
 import { useEffect, useState } from "react";
 import { db } from "../db";
 import { progression } from "../progression";
@@ -85,7 +86,7 @@ export function FantasyRoom({
   return (
     <div className="fantasy-room-page">
       <FantasySettings s={s} />
-      <div className="attic-scene">
+      <div className={"attic-scene place-" + (a.place || "attic")}>
         <div className="attic-label">
           MAGICAL ATTIC BEDROOM{" "}
           <small>
@@ -156,6 +157,29 @@ export function FantasyRoom({
           >
             โมโมะ · คู่หูขี้เล่น
           </button>
+        </div>
+        <div className="eye-choices">
+          <label>สีตา</label>
+          {eyeColors.map((e) => (
+            <button
+              key={e.id}
+              aria-pressed={(a.eyeColor || "pink") === e.id}
+              style={{ background: e.color }}
+              onClick={() => save({ eyeColor: e.id })}
+              aria-label={"สีตา" + e.name}
+            />
+          ))}
+          <label>
+            สถานที่
+            <select
+              value={a.place || "attic"}
+              onChange={(e) => save({ place: e.target.value })}
+            >
+              <option value="attic">ห้องแต่งตัว</option>
+              <option value="bridge">สะพานสวนจันทรา</option>
+              <option value="library">ห้องสมุด</option>
+            </select>
+          </label>
         </div>
         <div className="wardrobe-tabs">
           {[
@@ -363,7 +387,8 @@ export function FantasyRoom({
         </div>
         {note && <p role="alert">{note}</p>}
         <p className="info-note">
-          ตัวละครและของตกแต่งขณะนี้ใช้ภาพพิกเซลต้นแบบสำหรับทดสอบระบบ
+          ภาพตัวละครชุดนี้เป็นภาพวาดใหม่
+          ส่วนระบบเปลี่ยนชุดและทรงผมยังรอภาพแยกชั้นที่ตรงกับแต่ละรายการ
           ชุดบางแบบยังใช้โครงภาพร่วมกัน รายการปลดล็อกอ้างอิงเลเวลเดิม ไม่มีการแก้ยอดเงินจริง
         </p>
       </section>
@@ -383,7 +408,7 @@ export function CompanionWidget({ s }: { s: State }) {
   }, [a.character, mood.event, turn]);
   useEffect(() => {
     if (count >= text.length) return;
-    const id = setTimeout(() => setCount((n) => n + 1), 40);
+    const id = setTimeout(() => setCount((n) => n + 1), 27);
     return () => clearTimeout(id);
   }, [count, text]);
   if (!a.mode) return null;
