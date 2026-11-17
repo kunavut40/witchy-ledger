@@ -57,3 +57,13 @@ android/build-apk.ps1 ใช้ JDK21, Android Platform35 และ Build Tools3
 ## งานภาพ
 
 public/attic.png สร้างด้วย built-in ImageGen ไม่ใช้ CLI/API key ตามคำบรรยาย original dark cozy 2D pixel attic, charcoal timber, exactly three Gothic windows, golden standing astronomical clock, star-pattern bed, reading desk, wardrobe, mirror, warm lanterns, black cat, no people/no UI/no text/no copied assets ภาพนี้เป็นฉากฐาน ไม่ใช่ภาพตัวละครสำเร็จ
+
+## รุ่นทดลองที่ทำต่อจากบ้าน
+
+APK ล่าสุดอยู่ที่ [WitchyLedger-Preview.apk](./WitchyLedger-Preview.apk) ดาวน์โหลดจาก GitHub ด้วยปุ่ม Download raw แล้วเปิดบน Android 11 ขึ้นไป รุ่นนี้ใช้ package app.witchyledger.preview ติดตั้งคู่กับแอปเดิมและแยกฐานข้อมูล
+
+รุ่นทดลองเพิ่มใบหน้ายูอิในกรอบสนทนาและไอคอน เมนูกดค้างลากขึ้นเพื่อเลือกกาแฟ/น้ำมันพร้อมยอดด่วน บัญชีวงกลม ราคาแนะนำ และการตั้งชื่อรายการจากหมายเหตุ/หมวด
+
+ตรวจ build, ลายเซ็น APK และชุดทดสอบ 27 ข้อแล้ว ยังไม่ได้ทดสอบสัมผัสบนโทรศัพท์จริง ตัวละครเต็มตัวและห้องแต่งตัวยังเป็นภาพชุดเดิม การตั้งค่าวงเมนูด่วนและราคา รวมถึงงานภาพ/อนิเมชันตามคอนเซปต์ทั้งหมด ยังต้องพัฒนาต่อ
+
+ทำต่อที่คอมอื่นด้วย git pull แล้ว pnpm install และ pnpm dev

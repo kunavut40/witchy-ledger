@@ -1,3 +1,4 @@
+import QuickMenu from "./QuickMenu";
 import {
   FantasySettings,
   FantasyRoom,
@@ -1526,45 +1527,15 @@ export default function App() {
             ))}
         </select>
       </nav>
-      {quickAdd && (
-        <div className="quick-add-scrim" onClick={() => setQuickAdd(false)}>
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-label="เลือกประเภทรายการ"
-            className="quick-add-options"
-          >
-            <button
-              className="quick-income"
-              onClick={() => {
-                setQuickAdd(false);
-                setModal({
-                  type: "transaction",
-                  value: { ...emptyTx(), kind: "income" },
-                });
-                menuSound("equip", fantasy.muted);
-              }}
-            >
-              <ArrowDownRight size={36} />
-              <b>รายรับ</b>
-            </button>
-            <button
-              className="quick-expense"
-              onClick={() => {
-                setQuickAdd(false);
-                setModal({
-                  type: "transaction",
-                  value: { ...emptyTx(), kind: "expense" },
-                });
-                menuSound("equip", fantasy.muted);
-              }}
-            >
-              <ArrowUpRight size={36} />
-              <b>รายจ่าย</b>
-            </button>
-          </section>
-        </div>
-      )}
+      {quickAdd && <QuickMenu close={()=>setQuickAdd(false)} choose={(kind,id,amount)=>{
+        setQuickAdd(false);
+        const category=s.categories.find(c=>c.id===id && !c.archived);
+        const account=s.accounts.find(a=>a.active && a.id==="cash") || s.accounts.find(a=>a.active);
+        const t={...emptyTx(),kind,categoryId:category?.id||"",accountId:account?.id||"",amount:(amount||0)*100};
+        menuSound("equip",fantasy.muted);
+        if(amount && category && account) void act(()=>saveTransaction({...t,title:category.name,tags:"#"+category.name,time:new Date().toTimeString().slice(0,5)}),"บันทึก "+category.name+" "+amount+" บาทแล้ว");
+        else setModal({type:"transaction",value:t});
+      }}/>}
       {showProfile && (
         <Profile
           settings={s.settings}
@@ -1646,6 +1617,7 @@ function Editor({
   const [accountKind, setAccountKind] = useState(
     modal.type === "account" ? modal.value?.kind || "bank" : "bank",
   );
+  const categoryName=s.categories.find(c=>c.id===(subCat||mainCat))?.name || "";
   const formId = "editor-form";
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -1694,16 +1666,16 @@ function Editor({
           ...(tx || emptyTx()),
           kind: kind as Transaction["kind"],
           amount: satang(str("amount")),
-          title: str("title"),
+          title: str("note").slice(0,200) || tx?.title || categoryName || "รายการบัญชี",
           date: str("date"),
-          time: str("time"),
+          time: tx?.time || new Date().toTimeString().slice(0,5),
           accountId: str("accountId"),
           toAccountId: kind === "transfer" ? str("toAccountId") : "",
           categoryId: ["income", "expense"].includes(kind)
             ? subCat || mainCat
             : "",
           note: str("note"),
-          tags: str("tags"),
+          tags: Array.from(new Set([...(tx?.tags||"").split(" "),categoryName?"#"+categoryName:""].filter(Boolean))).join(" "),
           recurring: f.has("recurring"),
         };
         await saveTransaction(t);
@@ -1900,10 +1872,10 @@ function Editor({
                   <span>฿</span>
                   <input
                     name="amount"
-                    inputMode="decimal"
+                    inputMode={kind==="adjustment"?"decimal":"numeric"}
                     required
-                    placeholder="0.00"
-                    defaultValue={tx ? (tx.amount / 100).toFixed(2) : ""}
+                    placeholder="0"
+                    defaultValue={tx?.amount ? String(tx.amount / 100) : ""}
                   />
                 </div>
               </label>
@@ -1914,16 +1886,7 @@ function Editor({
                   เครื่องหมายบวกคือเพิ่มหนี้
                 </p>
               )}
-              <label>
-                ชื่อรายการ
-                <input
-                  name="title"
-                  required
-                  maxLength={200}
-                  placeholder="วันนี้ใช้จ่ายอะไรไปบ้าง?"
-                  defaultValue={tx?.title}
-                />
-              </label>
+              {kind==="expense" && categoryName && <div className="suggested-prices">ราคาแนะนำ {(categoryName.includes("กาแฟ")?[20,25,30]:categoryName.includes("น้ำมัน")?[120,300,500]:[40,45,50]).map(n=><button key={n} type="button" onClick={e=>{const input=e.currentTarget.form?.elements.namedItem("amount") as HTMLInputElement;if(input)input.value=String(n)}}>{n}</button>)}</div>}
               <div className="form-grid">
                 <label>
                   วันที่
@@ -1933,10 +1896,6 @@ function Editor({
                     required
                     defaultValue={tx?.date || today()}
                   />
-                </label>
-                <label>
-                  เวลา (ไม่บังคับ)
-                  <input type="time" name="time" defaultValue={tx?.time} />
                 </label>
               </div>
               {["income", "expense"].includes(kind) && (
@@ -1990,16 +1949,7 @@ function Editor({
                 </div>
               )}
               <div className="form-grid">
-                <label>
-                  {kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}
-                  <select
-                    name="accountId"
-                    required
-                    defaultValue={tx?.accountId || "bank"}
-                  >
-                    {accountOptions()}
-                  </select>
-                </label>
+                <fieldset className="account-orbs"><legend>{kind==="transfer"?"บัญชีต้นทาง":"บัญชี"}</legend>{accountOptions().map(o=><label key={o.key}><input type="radio" required name="accountId" value={o.props.value} defaultChecked={o.props.value===(tx?.accountId||"bank")}/><span>{s.accounts.find(a=>a.id===o.props.value)?.name}</span></label>)}</fieldset>
                 {kind === "transfer" && (
                   <label>
                     บัญชีปลายทาง
@@ -2026,14 +1976,6 @@ function Editor({
                   rows={2}
                   defaultValue={tx?.note}
                   placeholder="รายละเอียดเพิ่มเติม…"
-                />
-              </label>
-              <label>
-                แท็ก
-                <input
-                  name="tags"
-                  defaultValue={tx?.tags}
-                  placeholder="เช่น #วันทำงาน #จำเป็น"
                 />
               </label>
               <label className="check">
