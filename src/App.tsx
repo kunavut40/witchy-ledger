@@ -531,7 +531,7 @@ export default function App() {
           <div className="local-label">
             <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
           </div>
-          <small>Witchy Ledger · v0.6.0-test</small>
+          <small>Witchy Ledger · v0.6.2-local-test</small>
         </div>
       </aside>
       <div className="main-shell">
