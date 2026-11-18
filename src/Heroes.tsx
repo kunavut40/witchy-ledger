@@ -134,25 +134,40 @@ export function RankFrame({
         aria-hidden="true"
       >
         <path
-          d="M6 13V6h13V3h26v3h13v13h3v26h-3v13H45v3H19v-3H6V45H3V19h3z"
+          d="M16 16 L23 10 H41 L48 16 V42 L42 51 L32 57 L22 51 L16 42Z"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
+          stroke="#bc9856"
+          strokeWidth="3"
         />
-        {rankIndex > 1 && (
-          <path
-            d="M3 20H0v22h3v7h6v-5H6V22h3v-7H3z M61 20h3v22h-3v7h-6v-5h3V22h-3v-7h6z"
-            fill="currentColor"
-          />
-        )}
-        {rankIndex > 3 && (
-          <path
-            d="M14 7l-5-5h10l3 5z M50 7l5-5H45l-3 5z M11 55l-6 7h12l5-7z M53 55l6 7H47l-5-7z"
-            fill="currentColor"
-          />
-        )}
-        <path d="M28 57h8v5h-8z M30 54h4v10h-4z" fill="currentColor" />
-        {rankIndex > 5 && <path d="M25 4l7-4 7 4-7 7z" fill="#fff1b4" />}
+        {[0, 1].map((side) => (
+          <g key={side} transform={side ? "translate(64 0) scale(-1 1)" : ""}>
+            <path
+              d="M21 54L12 44L8 28L12 15"
+              fill="none"
+              stroke="#786548"
+              strokeWidth="2"
+            />
+            {[0, 1, 2, 3, 4].map((i) => (
+              <path
+                key={i}
+                d={`M${12 + i * 1.5} ${20 + i * 7} l-8 -7 v7 l7 6 l5 -6 v-6Z`}
+                fill={i % 2 ? "#dce3c3" : r.color}
+                stroke="#85724e"
+                strokeWidth="1"
+              />
+            ))}
+          </g>
+        ))}
+        <path
+          d="M22 12L20 4L28 8L32 1L36 8L44 4L42 12Z"
+          fill="#e6c47c"
+          stroke="#94764a"
+        />
+        <path
+          d="M29 7L32 4L35 7L32 11Z M28 54L32 50L36 54L32 60Z"
+          fill="#c2a1db"
+          stroke="#94764a"
+        />
       </svg>
     </span>
   );

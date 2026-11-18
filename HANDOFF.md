@@ -1,5 +1,9 @@
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
+## ล่าสุด 0.6.3-local-test
+
+อ่าน RELEASE-LOCAL-0.6.3.md ก่อน ทำต่อlocal0.6.2 ไม่รวมGitHub เพิ่มRadialEntry/EntryCategories/CompactHome ตั้งค่าวงจากแถบหัวเมนู+ กรอบRankFrameแบบมงกุฎใบไม้ และจำกัดความกว้างviewport Tests35ผ่าน versionCode9 key/packageเดิม ยังไม่มีการลองสัมผัสบนS25จริง ตรวจresponsiveต่อที่บ้าน ส่วนเสื้อผ้ายังรอlayerassets
+
 ## รุ่นล่าสุดที่ผู้ใช้สั่ง: 0.6.2-local-test — ซอร์สเครื่องนี้เท่านั้น
 
 อ่าน PROMPT-LOCAL-0.6.2.md และ RELEASE-LOCAL-0.6.2.md ก่อน ใช้ซอร์สเครื่องนี้ snapshot3fcacb6 ก่อนรวมGitHub ไม่ใช้treeของv0.6.1 ไม่ดึงหรือรวมงานGitHubเข้าบิลด์ใหม่ package app.witchyledger.offline versionCode8 signing keyเดิม คง4การ์ดรายละเอียด/สรุปรอบ/back/ผลตรวจwardrobeตามงานlocal

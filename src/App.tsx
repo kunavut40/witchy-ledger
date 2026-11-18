@@ -1,3 +1,6 @@
+import EntryCategories from "./EntryCategories";
+import CompactHome from "./CompactHome";
+import RadialEntry from "./RadialEntry";
 import DetailSheet from "./DetailSheet";
 import { type DetailKind } from "./details";
 import { usePageNavigation, isBackSwipe } from "./navigation";
@@ -156,6 +159,7 @@ function download(content: string, name: string, type = "application/json") {
 export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [quickAdd, setQuickAdd] = useState(false);
+  const quickSaving = useRef(false);
   const [page, setPage, goPageBack] = usePageNavigation("dashboard");
   const [detail, setDetail] = useState<DetailKind | null>(null);
   const swipeStart = useRef<{ x: number; y: number; time: number } | null>(
@@ -474,6 +478,7 @@ export default function App() {
           window.WitchyBack?.();
       }}
       className="app-shell"
+      data-page={page}
       data-theme={scene}
       data-palette={
         s.settings.find((x) => x.id === "appearance.palette")?.value ||
@@ -483,7 +488,7 @@ export default function App() {
       data-fantasy={fantasy.mode ? "on" : "off"}
       onClickCapture={(e) => {
         const target = (e.target as HTMLElement).closest(
-          ".nav-item,.hero-picker button,.icon-picker button",
+          "button,select,input[type=radio],input[type=checkbox]",
         );
         if (target)
           menuSound(
@@ -531,7 +536,7 @@ export default function App() {
           <div className="local-label">
             <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
           </div>
-          <small>Witchy Ledger · v0.6.2-local-test</small>
+          <small>Witchy Ledger · v0.6.3-local-test</small>
         </div>
       </aside>
       <div className="main-shell">
@@ -571,6 +576,14 @@ export default function App() {
           </div>
         </header>
         <main className="content">
+          {page === "dashboard" && (
+            <CompactHome
+              s={s}
+              p={p}
+              detail={setDetail}
+              open={() => setPage("transactions")}
+            />
+          )}
           {page !== "dashboard" && (
             <button
               className="text-button page-back"
@@ -1649,43 +1662,57 @@ export default function App() {
         </select>
       </nav>
       {quickAdd && (
-        <div className="quick-add-scrim" onClick={() => setQuickAdd(false)}>
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-label="เลือกประเภทรายการ"
-            className="quick-add-options"
-          >
-            <button
-              className="quick-income"
-              onClick={() => {
-                setQuickAdd(false);
-                setModal({
-                  type: "transaction",
-                  value: { ...emptyTx(), kind: "income" },
-                });
-                menuSound("equip", fantasy.muted);
-              }}
-            >
-              <ArrowDownRight size={36} />
-              <b>รายรับ</b>
-            </button>
-            <button
-              className="quick-expense"
-              onClick={() => {
-                setQuickAdd(false);
-                setModal({
-                  type: "transaction",
-                  value: { ...emptyTx(), kind: "expense" },
-                });
-                menuSound("equip", fantasy.muted);
-              }}
-            >
-              <ArrowUpRight size={36} />
-              <b>รายจ่าย</b>
-            </button>
-          </section>
-        </div>
+        <RadialEntry
+          s={s}
+          muted={fantasy.muted}
+          close={() => setQuickAdd(false)}
+          choose={async (kind, category, account, amount) => {
+            if (quickSaving.current) return;
+            const c = s.categories.find(
+              (c) => c.id === category && !c.archived && c.kind === kind,
+            );
+            const acc = s.accounts.find((a) => a.id === account && a.active);
+            if (
+              amount !== undefined &&
+              Number.isFinite(amount) &&
+              amount > 0 &&
+              c &&
+              acc
+            ) {
+              quickSaving.current = true;
+              try {
+                const ok = await act(
+                  () =>
+                    saveTransaction({
+                      ...emptyTx(),
+                      kind,
+                      categoryId: c.id,
+                      accountId: acc.id,
+                      amount: satang(String(amount)),
+                      title: c.name,
+                      tags: "#" + c.name,
+                      time: new Date().toTimeString().slice(0, 5),
+                    }),
+                  "บันทึก " + c.name + " " + amount + " บาทแล้ว",
+                );
+                if (ok) setQuickAdd(false);
+              } finally {
+                quickSaving.current = false;
+              }
+            } else {
+              setQuickAdd(false);
+              setModal({
+                type: "transaction",
+                value: {
+                  ...emptyTx(),
+                  kind,
+                  categoryId: c?.id || "",
+                  accountId: acc?.id || "",
+                },
+              });
+            }
+          }}
+        />
       )}
       {showProfile && (
         <Profile
@@ -1815,6 +1842,14 @@ function Editor({
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (busy) return;
+    if (
+      modal.type === "transaction" &&
+      ["income", "expense"].includes(kind) &&
+      !mainCat
+    ) {
+      setWarning("กรุณาเลือกหมวดหลัก");
+      return;
+    }
     setBusy(true);
     const f = new FormData(e.currentTarget);
     const str = (k: string) => String(f.get(k) || "").trim();
@@ -1824,16 +1859,24 @@ function Editor({
           ...(tx || emptyTx()),
           kind: kind as Transaction["kind"],
           amount: satang(str("amount")),
-          title: str("title"),
+          title:
+            str("note").slice(0, 200) ||
+            s.categories.find((c) => c.id === (subCat || mainCat))?.name ||
+            tx?.title ||
+            "รายการบัญชี",
           date: str("date"),
-          time: str("time"),
+          time: tx?.time || new Date().toTimeString().slice(0, 5),
           accountId: str("accountId"),
           toAccountId: kind === "transfer" ? str("toAccountId") : "",
           categoryId: ["income", "expense"].includes(kind)
             ? subCat || mainCat
             : "",
           note: str("note"),
-          tags: str("tags"),
+          tags:
+            tx?.tags ||
+            "#" +
+              (s.categories.find((c) => c.id === (subCat || mainCat))?.name ||
+                kind),
           recurring: f.has("recurring"),
         };
         await saveTransaction(t);
@@ -2044,16 +2087,7 @@ function Editor({
                   เครื่องหมายบวกคือเพิ่มหนี้
                 </p>
               )}
-              <label>
-                ชื่อรายการ
-                <input
-                  name="title"
-                  required
-                  maxLength={200}
-                  placeholder="วันนี้ใช้จ่ายอะไรไปบ้าง?"
-                  defaultValue={tx?.title}
-                />
-              </label>
+
               <div className="form-grid">
                 <label>
                   วันที่
@@ -2064,72 +2098,46 @@ function Editor({
                     defaultValue={tx?.date || today()}
                   />
                 </label>
-                <label>
-                  เวลา (ไม่บังคับ)
-                  <input type="time" name="time" defaultValue={tx?.time} />
-                </label>
               </div>
               {["income", "expense"].includes(kind) && (
-                <div className="form-grid">
-                  <label>
-                    หมวดหลัก
-                    <select
-                      required
-                      value={mainCat}
-                      onChange={(e) => {
-                        setMainCat(e.target.value);
-                        setSubCat("");
-                      }}
-                    >
-                      <option value="">เลือกหมวดหมู่</option>
-                      {s.categories
-                        .filter(
-                          (c) =>
-                            !c.parentId &&
-                            c.kind === kind &&
-                            (!c.archived || c.id === mainCat),
-                        )
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <label>
-                    หมวดย่อย
-                    <select
-                      value={subCat}
-                      onChange={(e) => setSubCat(e.target.value)}
-                    >
-                      <option value="">ใช้หมวดหลัก</option>
-                      {s.categories
-                        .filter(
-                          (c) =>
-                            !!mainCat &&
-                            c.parentId === mainCat &&
-                            (!c.archived || c.id === subCat),
-                        )
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                </div>
+                <EntryCategories
+                  s={s}
+                  kind={kind}
+                  main={mainCat}
+                  sub={subCat}
+                  change={(m, c) => {
+                    setMainCat(m);
+                    setSubCat(c);
+                  }}
+                />
               )}
               <div className="form-grid">
-                <label>
-                  {kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}
-                  <select
-                    name="accountId"
-                    required
-                    defaultValue={tx?.accountId || "bank"}
-                  >
-                    {accountOptions()}
-                  </select>
-                </label>
+                <fieldset className="entry-accounts">
+                  <legend>✧ {kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}</legend>
+                  {accountOptions().map((o) => (
+                    <label key={o.key}>
+                      <input
+                        type="radio"
+                        name="accountId"
+                        value={o.props.value}
+                        required
+                        defaultChecked={
+                          o.props.value === (tx?.accountId || "bank")
+                        }
+                      />
+                      <span>
+                        <Pixel
+                          name={
+                            s.accounts.find((a) => a.id === o.props.value)
+                              ?.icon || "chest"
+                          }
+                          size={30}
+                        />
+                        {s.accounts.find((a) => a.id === o.props.value)?.name}
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
                 {kind === "transfer" && (
                   <label>
                     บัญชีปลายทาง
@@ -2158,14 +2166,7 @@ function Editor({
                   placeholder="รายละเอียดเพิ่มเติม…"
                 />
               </label>
-              <label>
-                แท็ก
-                <input
-                  name="tags"
-                  defaultValue={tx?.tags}
-                  placeholder="เช่น #วันทำงาน #จำเป็น"
-                />
-              </label>
+
               <label className="check">
                 <input
                   type="checkbox"
