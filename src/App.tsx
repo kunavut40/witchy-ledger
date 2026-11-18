@@ -1,3 +1,7 @@
+import SceneTransition, { sceneGust } from "./SceneTransition";
+import { testUnlocked } from "./testing";
+import { CharacterAppearanceContext } from "./CharacterArt";
+import MagicDatePicker, { CalendarThemes } from "./MagicDatePicker";
 import EntryCategories from "./EntryCategories";
 import CompactHome from "./CompactHome";
 import RadialEntry from "./RadialEntry";
@@ -92,7 +96,7 @@ import {
   periodWarnings,
   nextPeriod,
 } from "./domain";
-import Pixel, { icons } from "./Pixel";
+import Pixel, { icons, iconLabels, categoryIcon } from "./Pixel";
 const nav = [
   ["dashboard", "ภาพรวม", LayoutDashboard],
   ["transactions", "รายการธุรกรรม", ArrowRightLeft],
@@ -165,9 +169,11 @@ export default function App() {
   const swipeStart = useRef<{ x: number; y: number; time: number } | null>(
     null,
   );
+  const [moreOpen, setMoreOpen] = useState(false);
   const [periodId, setPeriodId] = useState(""),
     [modal, setModal] = useState<Modal>(null),
     [notice, setNotice] = useState(""),
+    [quickUndo, setQuickUndo] = useState(""),
     [error, setError] = useState(""),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState(""),
@@ -200,6 +206,14 @@ export default function App() {
   useEffect(() => {
     window.WitchyBack = () => {
       if (document.querySelector('[role="alertdialog"]')) return true;
+      const overlayBack = new Event("witchy-overlay-back", {
+        cancelable: true,
+      });
+      if (!document.dispatchEvent(overlayBack)) return true;
+      if (moreOpen) {
+        setMoreOpen(false);
+        return true;
+      }
       if (modal) {
         void askConfirm("ยกเลิกการแก้ไขและย้อนกลับ? ข้อมูลที่ยังไม่บันทึกจะไม่ถูกเก็บ").then(
           (ok) => ok && setModal(null),
@@ -218,10 +232,6 @@ export default function App() {
         document.dispatchEvent(new Event("witchy-detail-back"));
         return true;
       }
-      const overlayBack = new Event("witchy-overlay-back", {
-        cancelable: true,
-      });
-      if (!document.dispatchEvent(overlayBack)) return true;
       return goPageBack();
     };
     const key = (e: KeyboardEvent) => {
@@ -232,11 +242,22 @@ export default function App() {
       delete window.WitchyBack;
       removeEventListener("keydown", key);
     };
-  }, [page, modal, showProfile, quickAdd, detail]);
+  }, [page, modal, showProfile, quickAdd, detail, moreOpen]);
+  const manualTransition = useRef(false);
+  useEffect(() => {
+    const recording = modal?.type === "transaction";
+    if (recording && manualTransition.current) {
+      sceneGust("in");
+      manualTransition.current = false;
+    }
+  }, [modal?.type]);
   const liveState = useLiveQuery(() => readState(), [], undefined);
   useEffect(() => {
     if (notice) {
-      const t = setTimeout(() => setNotice(""), 4500);
+      const t = setTimeout(() => {
+        setNotice("");
+        setQuickUndo("");
+      }, 4500);
       return () => clearTimeout(t);
     }
   }, [notice]);
@@ -245,6 +266,7 @@ export default function App() {
     message = "บันทึกเรียบร้อยแล้ว",
   ) => {
     try {
+      setQuickUndo("");
       await fn();
       setNotice(message);
       setError("");
@@ -320,8 +342,8 @@ export default function App() {
             <tr>
               <th>รายการ</th>
               <th>วันที่</th>
-              <th>บัญชี</th>
               <th className="right">จำนวนเงิน</th>
+              <th>บัญชี</th>
               <th>
                 <span className="sr-only">จัดการ</span>
               </th>
@@ -336,10 +358,7 @@ export default function App() {
                       className="pixel-box"
                       style={{ color: cat(t.categoryId)?.color || "#9680bc" }}
                     >
-                      <Pixel
-                        name={cat(t.categoryId)?.icon || "coin"}
-                        size={30}
-                      />
+                      <Pixel name={categoryIcon(cat(t.categoryId))} size={30} />
                     </span>
                     <span>
                       <strong>{t.title}</strong>
@@ -352,12 +371,6 @@ export default function App() {
                   </div>
                 </td>
                 <td className="nowrap">{thaiDate(t.date, true)}</td>
-                <td>
-                  {acc(t.accountId)?.name}
-                  {t.toAccountId && (
-                    <small> → {acc(t.toAccountId)?.name}</small>
-                  )}
-                </td>
                 <td
                   className={
                     "amount " +
@@ -370,6 +383,12 @@ export default function App() {
                 >
                   {t.kind === "income" ? "+" : t.kind === "expense" ? "-" : ""}฿
                   {money(t.amount)}
+                </td>
+                <td>
+                  {acc(t.accountId)?.name}
+                  {t.toAccountId && (
+                    <small> → {acc(t.toAccountId)?.name}</small>
+                  )}
                 </td>
                 <td>
                   <div className="row-actions">
@@ -459,1309 +478,1438 @@ export default function App() {
     );
   }
   return (
-    <div
-      onPointerDown={(e) => {
-        if ((e.target as HTMLElement).closest("input,textarea,select,button,a"))
-          return;
-        swipeStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
-      }}
-      onPointerCancel={() => {
-        swipeStart.current = null;
-      }}
-      onPointerUp={(e) => {
-        const start = swipeStart.current;
-        swipeStart.current = null;
-        if (
-          start &&
-          isBackSwipe(start, { x: e.clientX, y: e.clientY, time: Date.now() })
-        )
-          window.WitchyBack?.();
-      }}
-      className="app-shell"
-      data-page={page}
-      data-theme={scene}
-      data-palette={
-        s.settings.find((x) => x.id === "appearance.palette")?.value ||
-        "lavender"
-      }
-      data-eye={fantasy.eyeColor || "pink"}
-      data-fantasy={fantasy.mode ? "on" : "off"}
-      onClickCapture={(e) => {
-        const target = (e.target as HTMLElement).closest(
-          "button,select,input[type=radio],input[type=checkbox]",
-        );
-        if (target)
-          menuSound(
-            target.matches(".hero-picker button") ? "character" : "select",
-            fantasy.muted,
+    <CharacterAppearanceContext.Provider value={fantasy}>
+      <div
+        onPointerDown={(e) => {
+          if (
+            (e.target as HTMLElement).closest("input,textarea,select,button,a")
+          )
+            return;
+          swipeStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+        }}
+        onPointerCancel={() => {
+          swipeStart.current = null;
+        }}
+        onPointerUp={(e) => {
+          const start = swipeStart.current;
+          swipeStart.current = null;
+          if (
+            start &&
+            isBackSwipe(start, { x: e.clientX, y: e.clientY, time: Date.now() })
+          )
+            window.WitchyBack?.();
+        }}
+        className="app-shell"
+        data-look={
+          fantasy.outfit === 0
+            ? "basic"
+            : fantasy.outfit === 7
+              ? "casual"
+              : "mage"
+        }
+        data-page={page}
+        data-theme={scene}
+        data-palette={
+          s.settings.find((x) => x.id === "appearance.palette")?.value ||
+          "lavender"
+        }
+        data-eye={fantasy.eyeColor || "pink"}
+        data-fantasy={fantasy.mode ? "on" : "off"}
+        onClickCapture={(e) => {
+          const target = (e.target as HTMLElement).closest(
+            "button,select,input[type=radio],input[type=checkbox]",
           );
-      }}
-    >
-      <aside className="sidebar">
-        <a
-          className="brand"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setPage("dashboard");
-          }}
-        >
-          <img src="/icon.svg" alt="" />
-          <span>
-            Witchy Ledger<small>YOUR LITTLE MONEY GRIMOIRE</small>
-          </span>
-        </a>
-        <div className="nav-caption">สมุดบัญชีของคุณ</div>
-        <nav>
-          {nav.map(([id, label, Icon], i) => (
-            <button
-              key={id}
-              className={page === id ? "nav-item active" : "nav-item"}
-              onClick={() => setPage(id)}
-            >
-              {i === 9 && <span />}
-              <Icon size={19} />
-              {label}
-              {page === id && <span className="active-dot" />}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="mini-moon">
-            <Pixel name="moon" size={48} />
-            <p>
-              ทีละนิด ก็เป็นเวทมนตร์ได้<small>ดูแลเงิน ดูแลตัวเอง</small>
-            </p>
-          </div>
-          <div className="local-label">
-            <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
-          </div>
-          <small>Witchy Ledger · v0.6.3-local-test</small>
-        </div>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <button className="mobile-brand" onClick={() => setPage("dashboard")}>
-            <img src="/yui-icon.png" alt="" />
+          if (target)
+            menuSound(
+              target.matches(".hero-picker button") ? "character" : "select",
+              fantasy.muted,
+            );
+        }}
+      >
+        <aside className="sidebar">
+          <a
+            className="brand"
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setPage("dashboard");
+            }}
+          >
+            <img src="/icon.svg" alt="" />
             <span>
               Witchy Ledger<small>YOUR LITTLE MONEY GRIMOIRE</small>
             </span>
-          </button>
-          <div className="top-actions">
-            <span className="offline-pill">
-              <i />
-              {online ? "Local-first" : "ออฟไลน์"}
-            </span>
-            <button
-              className="profile-button"
-              aria-label="แก้ไขชื่อเล่นและตัวละคร"
-              onClick={() => setShowProfile(true)}
-            >
-              <span className="profile-nickname">
-                {profile.nickname}
-                <small>
-                  {s.settings.find((x) => x.id === "profile.title")?.value ||
-                    player.rank.title}{" "}
-                  · LV. {player.level}
-                </small>
-              </span>
-              <span className="avatar character-avatar">
-                <Character
-                  id={profile.avatar}
-                  size={37}
-                  rankIndex={player.rankIndex}
-                />
-              </span>
-            </button>
-          </div>
-        </header>
-        <main className="content">
-          {page === "dashboard" && (
-            <CompactHome
-              s={s}
-              p={p}
-              detail={setDetail}
-              open={() => setPage("transactions")}
-            />
-          )}
-          {page !== "dashboard" && (
-            <button
-              className="text-button page-back"
-              onClick={() => window.WitchyBack?.()}
-            >
-              ← ย้อนกลับ
-            </button>
-          )}
-          <div className="page-heading">
-            <div>
-              <span className="eyebrow">A LITTLE MAGIC, EVERY DAY</span>
-              <h1>
-                {page === "dashboard"
-                  ? "ภาพรวมการเงิน"
-                  : nav.find((n) => n[0] === page)?.[1]}{" "}
-                <span className="heading-star">✦</span>
-              </h1>
+          </a>
+          <div className="nav-caption">สมุดบัญชีของคุณ</div>
+          <nav>
+            {nav.map(([id, label, Icon], i) => (
+              <button
+                key={id}
+                className={page === id ? "nav-item active" : "nav-item"}
+                onClick={() => setPage(id)}
+              >
+                {i === 9 && <span />}
+                <Icon size={19} />
+                {label}
+                {page === id && <span className="active-dot" />}
+              </button>
+            ))}
+          </nav>
+          <div className="sidebar-bottom">
+            <div className="mini-moon">
+              <Pixel name="moon" size={48} />
               <p>
-                {page === "dashboard"
-                  ? "ค่อย ๆ ดูแลเงินของคุณ ให้เติบโตไปด้วยกัน"
-                  : "ทุกเรื่องการเงิน อยู่ในสมุดเล่มเดียว"}
+                ทีละนิด ก็เป็นเวทมนตร์ได้<small>ดูแลเงิน ดูแลตัวเอง</small>
               </p>
             </div>
-            <button
-              className="primary"
-              onClick={() => setModal({ type: "transaction" })}
-            >
-              <Plus size={19} /> เพิ่มรายการ
-            </button>
+            <div className="local-label">
+              <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
+            </div>
+            <small>Witchy Ledger · v0.6.3-local-test</small>
           </div>
-          {(page === "dashboard" ||
-            page === "transactions" ||
-            page === "reports" ||
-            page === "budgets") && (
-            <div className="period-bar">
-              <div>
-                <span className="period-icon">
-                  <CalendarDays size={20} />
-                </span>
-                <div>
-                  <small>รอบบัญชีที่เลือก</small>
-                  <select
-                    aria-label="เลือกรอบบัญชี"
-                    value={p.id}
-                    onChange={(e) => setPeriodId(e.target.value)}
-                  >
-                    {s.periods
-                      .slice()
-                      .sort((a, b) => b.start.localeCompare(a.start))
-                      .map((x) => (
-                        <option key={x.id} value={x.id}>
-                          {x.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              </div>
-              <span className="period-dates">
-                {thaiDate(p.start, true)} <span>—</span> {thaiDate(p.end, true)}
+        </aside>
+        <div className="main-shell">
+          <header className="topbar">
+            <button
+              className="mobile-brand"
+              onClick={() => setPage("dashboard")}
+            >
+              <img src="/yui-icon.png" alt="" />
+              <span>
+                Witchy Ledger<small>YOUR LITTLE MONEY GRIMOIRE</small>
+              </span>
+            </button>
+            <div className="top-actions">
+              <span className="offline-pill">
+                <i />
+                {online ? "Local-first" : "ออฟไลน์"}
               </span>
               <button
-                className="text-button"
-                onClick={() => setPage("periods")}
+                className="profile-button"
+                aria-label="แก้ไขชื่อเล่นและตัวละคร"
+                onClick={() => setShowProfile(true)}
               >
-                จัดการรอบ <ChevronRight size={15} />
+                <span className="profile-nickname">
+                  {profile.nickname}
+                  <small>
+                    {s.settings.find((x) => x.id === "profile.title")?.value ||
+                      player.rank.title}{" "}
+                    · LV. {player.level}
+                  </small>
+                  <span className="header-xp">
+                    <i style={{ width: player.levelProgress + "%" }} />
+                  </span>
+                </span>
+                <span className="avatar character-avatar">
+                  <Character
+                    id={profile.avatar}
+                    size={37}
+                    rankIndex={
+                      testUnlocked(s)
+                        ? Number(
+                            s.settings.find((x) => x.id === "profile.testRank")
+                              ?.value || player.rankIndex,
+                          )
+                        : player.rankIndex
+                    }
+                  />
+                </span>
               </button>
             </div>
-          )}
-          {isDemo && (
-            <div className="banner">
-              กำลังใช้ข้อมูลตัวอย่าง · ล้างข้อมูลตัวอย่างได้ที่หน้าตั้งค่า
-            </div>
-          )}
-          {page === "dashboard" && (
-            <>
-              <ProgressBanner
-                transactions={s.transactions}
-                avatar={profile.avatar}
-                open={() => setShowProfile(true)}
+          </header>
+          <main className="content">
+            {page === "dashboard" && (
+              <CompactHome
+                s={s}
+                p={p}
+                detail={setDetail}
+                open={() => setPage("transactions")}
               />
-              <section className="welcome-strip">
-                <div>
-                  <span className="welcome-tag">
-                    <Sparkles size={14} /> YOUR MONEY, YOUR MAGIC
-                  </span>
-                  <h2>ให้ทุกการบันทึก เป็นจุดเริ่มต้นที่ดี</h2>
-                  <p>รายรับ รายจ่าย และเป้าหมายเล็ก ๆ ในทุกวัน</p>
-                </div>
-                <div className="witch-art" aria-hidden="true">
-                  <span className="spark s1">✧</span>
-                  <span className="spark s2">✦</span>
-                  <Pixel name="moon" size={52} />
-                  <Pixel name="potion" size={76} />
-                  <Pixel name="flower" size={58} />
-                  <span className="art-shelf" />
-                </div>
-              </section>
-              <div className="stats-grid">
-                <article
-                  className="stat-card balance-card detail-trigger"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="ดูรายละเอียดเงินคงเหลือ"
-                  onClick={() => setDetail("actual")}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setDetail("actual");
-                    }
-                  }}
-                >
-                  <div className="spread">
-                    <span>เงินคงเหลือจริงสะสม</span>
-                    <Wallet size={19} />
-                  </div>
-                  <h2>฿{money(sum.actual)}</h2>
-                  <small>ยอดทุกบัญชีเงิน ณ วันสิ้นสุดรอบ</small>
-                  <span className="stat-decoration">✧</span>
-                </article>
-                <article
-                  className="stat-card detail-trigger"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="ดูรายละเอียดรายรับ"
-                  onClick={() => setDetail("income")}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setDetail("income");
-                    }
-                  }}
-                >
-                  <div className="spread">
-                    <span>รายรับรอบนี้</span>
-                    <span className="stat-icon green">
-                      <ArrowDownRight size={18} />
-                    </span>
-                  </div>
-                  <h2 className="income">฿{money(sum.income)}</h2>
-                  <small>เฉพาะวันที่ในรอบบัญชี</small>
-                </article>
-                <article
-                  className="stat-card detail-trigger"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="ดูรายละเอียดรายจ่าย"
-                  onClick={() => setDetail("expense")}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setDetail("expense");
-                    }
-                  }}
-                >
-                  <div className="spread">
-                    <span>รายจ่ายรอบนี้</span>
-                    <span className="stat-icon pink">
-                      <ArrowUpRight size={18} />
-                    </span>
-                  </div>
-                  <h2 className="expense">฿{money(sum.expense)}</h2>
-                  <small>รวมยอดซื้อผ่านบัตรเครดิต</small>
-                </article>
-                <article
-                  className="stat-card detail-trigger"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="ดูรายละเอียดยอดสุทธิ"
-                  onClick={() => setDetail("flow")}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setDetail("flow");
-                    }
-                  }}
-                >
-                  <div className="spread">
-                    <span>ยอดสุทธิของรอบ</span>
-                    <span className="stat-icon purple">
-                      <ArrowRightLeft size={18} />
-                    </span>
-                  </div>
-                  <h2>฿{money(sum.flow)}</h2>
-                  <small>รายรับ − รายจ่ายเฉพาะรอบ</small>
-                </article>
+            )}
+            {page !== "dashboard" && (
+              <button
+                className="text-button page-back"
+                onClick={() => window.WitchyBack?.()}
+              >
+                ← ย้อนกลับ
+              </button>
+            )}
+            <div className="page-heading">
+              <div>
+                <span className="eyebrow">A LITTLE MAGIC, EVERY DAY</span>
+                <h1>
+                  {page === "dashboard"
+                    ? "ภาพรวมการเงิน"
+                    : nav.find((n) => n[0] === page)?.[1]}{" "}
+                  <span className="heading-star">✦</span>
+                </h1>
+                <p>
+                  {page === "dashboard"
+                    ? "ค่อย ๆ ดูแลเงินของคุณ ให้เติบโตไปด้วยกัน"
+                    : "ทุกเรื่องการเงิน อยู่ในสมุดเล่มเดียว"}
+                </p>
               </div>
-            </>
-          )}
-          {(page === "dashboard" || page === "reports") && (
-            <>
-              <div className="charts-grid">
-                <section className="card">
-                  <div className="card-heading">
-                    <h3>รายจ่ายแยกตามหมวดหมู่</h3>
-                    <button
-                      className="tag"
-                      onClick={() => setDetail("period")}
-                      aria-label="ดูสรุปรายจ่ายรอบนี้"
+              <button
+                className="primary"
+                onClick={() => setModal({ type: "transaction" })}
+              >
+                <Plus size={19} /> เพิ่มรายการ
+              </button>
+            </div>
+            {(page === "dashboard" ||
+              page === "transactions" ||
+              page === "reports" ||
+              page === "budgets") && (
+              <div className="period-bar">
+                <div>
+                  <span className="period-icon">
+                    <CalendarDays size={20} />
+                  </span>
+                  <div>
+                    <small>รอบบัญชีที่เลือก</small>
+                    <select
+                      aria-label="เลือกรอบบัญชี"
+                      value={p.id}
+                      onChange={(e) => setPeriodId(e.target.value)}
                     >
-                      รอบนี้ <ChevronRight size={12} />
-                    </button>
+                      {s.periods
+                        .slice()
+                        .sort((a, b) => b.start.localeCompare(a.start))
+                        .map((x) => (
+                          <option key={x.id} value={x.id}>
+                            {x.name}
+                          </option>
+                        ))}
+                    </select>
                   </div>
-                  {chartCats.length ? (
-                    <div className="donut-layout">
-                      <div className="donut">
-                        <ResponsiveContainer width="100%" height={210}>
-                          <PieChart>
-                            <Pie
-                              data={chartCats}
-                              dataKey="value"
-                              innerRadius={69}
-                              outerRadius={88}
-                              paddingAngle={4}
-                              stroke="none"
-                            >
-                              {chartCats.map((c) => (
-                                <Cell key={c.id} fill={c.color} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(v) => "฿" + money(Number(v))}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="donut-center">
-                          <small>รายจ่ายทั้งหมด</small>
-                          <b>฿{money(sum.expense)}</b>
+                </div>
+                <span className="period-dates">
+                  {thaiDate(p.start, true)} <span>—</span>{" "}
+                  {thaiDate(p.end, true)}
+                </span>
+                <button
+                  className="text-button"
+                  onClick={() => setPage("periods")}
+                >
+                  จัดการรอบ <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
+            {isDemo && (
+              <div className="banner">
+                กำลังใช้ข้อมูลตัวอย่าง · ล้างข้อมูลตัวอย่างได้ที่หน้าตั้งค่า
+              </div>
+            )}
+            {page === "dashboard" && (
+              <>
+                <ProgressBanner
+                  transactions={s.transactions}
+                  avatar={profile.avatar}
+                  open={() => setShowProfile(true)}
+                />
+                <section className="welcome-strip">
+                  <div>
+                    <span className="welcome-tag">
+                      <Sparkles size={14} /> YOUR MONEY, YOUR MAGIC
+                    </span>
+                    <h2>ให้ทุกการบันทึก เป็นจุดเริ่มต้นที่ดี</h2>
+                    <p>รายรับ รายจ่าย และเป้าหมายเล็ก ๆ ในทุกวัน</p>
+                  </div>
+                  <div className="witch-art" aria-hidden="true">
+                    <span className="spark s1">✧</span>
+                    <span className="spark s2">✦</span>
+                    <Pixel name="moon" size={52} />
+                    <Pixel name="potion" size={76} />
+                    <Pixel name="flower" size={58} />
+                    <span className="art-shelf" />
+                  </div>
+                </section>
+                <div className="stats-grid">
+                  <article
+                    className="stat-card balance-card detail-trigger"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="ดูรายละเอียดเงินคงเหลือ"
+                    onClick={() => setDetail("actual")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setDetail("actual");
+                      }
+                    }}
+                  >
+                    <div className="spread">
+                      <span>เงินคงเหลือจริงสะสม</span>
+                      <Wallet size={19} />
+                    </div>
+                    <h2>฿{money(sum.actual)}</h2>
+                    <small>ยอดทุกบัญชีเงิน ณ วันสิ้นสุดรอบ</small>
+                    <span className="stat-decoration">✧</span>
+                  </article>
+                  <article
+                    className="stat-card detail-trigger"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="ดูรายละเอียดรายรับ"
+                    onClick={() => setDetail("income")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setDetail("income");
+                      }
+                    }}
+                  >
+                    <div className="spread">
+                      <span>รายรับรอบนี้</span>
+                      <span className="stat-icon green">
+                        <ArrowDownRight size={18} />
+                      </span>
+                    </div>
+                    <h2 className="income">฿{money(sum.income)}</h2>
+                    <small>เฉพาะวันที่ในรอบบัญชี</small>
+                  </article>
+                  <article
+                    className="stat-card detail-trigger"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="ดูรายละเอียดรายจ่าย"
+                    onClick={() => setDetail("expense")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setDetail("expense");
+                      }
+                    }}
+                  >
+                    <div className="spread">
+                      <span>รายจ่ายรอบนี้</span>
+                      <span className="stat-icon pink">
+                        <ArrowUpRight size={18} />
+                      </span>
+                    </div>
+                    <h2 className="expense">฿{money(sum.expense)}</h2>
+                    <small>รวมยอดซื้อผ่านบัตรเครดิต</small>
+                  </article>
+                  <article
+                    className="stat-card detail-trigger"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="ดูรายละเอียดยอดสุทธิ"
+                    onClick={() => setDetail("flow")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setDetail("flow");
+                      }
+                    }}
+                  >
+                    <div className="spread">
+                      <span>ยอดสุทธิของรอบ</span>
+                      <span className="stat-icon purple">
+                        <ArrowRightLeft size={18} />
+                      </span>
+                    </div>
+                    <h2>฿{money(sum.flow)}</h2>
+                    <small>รายรับ − รายจ่ายเฉพาะรอบ</small>
+                  </article>
+                </div>
+              </>
+            )}
+            {(page === "dashboard" || page === "reports") && (
+              <>
+                <div className="charts-grid">
+                  <section className="card">
+                    <div className="card-heading">
+                      <h3>รายจ่ายแยกตามหมวดหมู่</h3>
+                      <button
+                        className="tag"
+                        onClick={() => setDetail("period")}
+                        aria-label="ดูสรุปรายจ่ายรอบนี้"
+                      >
+                        รอบนี้ <ChevronRight size={12} />
+                      </button>
+                    </div>
+                    {chartCats.length ? (
+                      <div className="donut-layout">
+                        <div className="donut">
+                          <ResponsiveContainer width="100%" height={210}>
+                            <PieChart>
+                              <Pie
+                                data={chartCats}
+                                dataKey="value"
+                                innerRadius={69}
+                                outerRadius={88}
+                                paddingAngle={4}
+                                stroke="none"
+                              >
+                                {chartCats.map((c) => (
+                                  <Cell key={c.id} fill={c.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                formatter={(v) => "฿" + money(Number(v))}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="donut-center">
+                            <small>รายจ่ายทั้งหมด</small>
+                            <b>฿{money(sum.expense)}</b>
+                          </div>
+                        </div>
+                        <div className="legend">
+                          {chartCats.map((c) => (
+                            <div key={c.id}>
+                              <span>
+                                <i
+                                  className="dot"
+                                  style={{ background: c.color }}
+                                />
+                                {c.name}
+                              </span>
+                              <b>
+                                {Math.round((c.value / sum.expense) * 100)}%
+                              </b>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className="legend">
-                        {chartCats.map((c) => (
-                          <div key={c.id}>
-                            <span>
-                              <i
-                                className="dot"
-                                style={{ background: c.color }}
+                    ) : (
+                      <div className="chart-empty">
+                        <div className="empty-donut">
+                          <Pixel name="crystal" size={44} />
+                        </div>
+                        <p>กราฟจะปรากฏเมื่อมีรายจ่ายในรอบนี้</p>
+                      </div>
+                    )}
+                  </section>
+                  <section className="card">
+                    <div className="card-heading">
+                      <h3>จังหวะการใช้จ่าย</h3>
+                      <span className="tag">รายวัน · บาท</span>
+                    </div>
+                    {daily.length ? (
+                      <ResponsiveContainer width="100%" height={225}>
+                        <AreaChart
+                          data={daily}
+                          margin={{ top: 25, right: 8, left: -22, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient
+                              id="area"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor="#aa95d3"
+                                stopOpacity={0.3}
                               />
-                              {c.name}
-                            </span>
-                            <b>{Math.round((c.value / sum.expense) * 100)}%</b>
-                          </div>
-                        ))}
+                              <stop
+                                offset="100%"
+                                stopColor="#aa95d3"
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid
+                            strokeDasharray="4 5"
+                            vertical={false}
+                            stroke="#eee9f3"
+                          />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 11, fill: "#99909e" }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: "#99909e" }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Tooltip
+                            formatter={(v) => "฿" + money(Number(v) * 100)}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="amount"
+                            name="รายจ่าย"
+                            stroke="#a28aca"
+                            fill="url(#area)"
+                            strokeWidth={2.5}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="chart-empty">
+                        <ChartNoAxesCombined size={46} />
+                        <p>เริ่มบันทึกเพื่อเห็นจังหวะการใช้จ่ายของคุณ</p>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="chart-empty">
-                      <div className="empty-donut">
-                        <Pixel name="crystal" size={44} />
-                      </div>
-                      <p>กราฟจะปรากฏเมื่อมีรายจ่ายในรอบนี้</p>
-                    </div>
-                  )}
-                </section>
-                <section className="card">
-                  <div className="card-heading">
-                    <h3>จังหวะการใช้จ่าย</h3>
-                    <span className="tag">รายวัน · บาท</span>
-                  </div>
-                  {daily.length ? (
-                    <ResponsiveContainer width="100%" height={225}>
-                      <AreaChart
-                        data={daily}
-                        margin={{ top: 25, right: 8, left: -22, bottom: 0 }}
+                    )}
+                  </section>
+                </div>
+                <div className="lower-grid">
+                  <section className="card">
+                    <div className="card-heading">
+                      <h3>ดูแลงบประมาณ</h3>
+                      <button
+                        className="text-button"
+                        onClick={() => setPage("budgets")}
                       >
-                        <defs>
-                          <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-                            <stop
-                              offset="0%"
-                              stopColor="#aa95d3"
-                              stopOpacity={0.3}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#aa95d3"
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="4 5"
-                          vertical={false}
-                          stroke="#eee9f3"
-                        />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 11, fill: "#99909e" }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 11, fill: "#99909e" }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          formatter={(v) => "฿" + money(Number(v) * 100)}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="amount"
-                          name="รายจ่าย"
-                          stroke="#a28aca"
-                          fill="url(#area)"
-                          strokeWidth={2.5}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="chart-empty">
-                      <ChartNoAxesCombined size={46} />
-                      <p>เริ่มบันทึกเพื่อเห็นจังหวะการใช้จ่ายของคุณ</p>
+                        ดูทั้งหมด <ChevronRight size={14} />
+                      </button>
                     </div>
-                  )}
-                </section>
-              </div>
-              <div className="lower-grid">
-                <section className="card">
-                  <div className="card-heading">
-                    <h3>ดูแลงบประมาณ</h3>
+                    {budgetCards()}
                     <button
                       className="text-button"
-                      onClick={() => setPage("budgets")}
+                      onClick={() => setModal({ type: "budget" })}
+                    >
+                      <Plus size={14} /> ตั้งงบประมาณ
+                    </button>
+                  </section>
+                  <section className="card goals-summary">
+                    <div className="card-heading">
+                      <h3>เติบโตทีละนิด</h3>
+                      <Leaf size={18} />
+                    </div>
+                    <div className="summary-item">
+                      <span className="pixel-box blue">
+                        <Pixel name="chest" />
+                      </span>
+                      <div>
+                        <small>เงินออมสะสม ณ สิ้นรอบ</small>
+                        <h2>
+                          ฿
+                          {money(
+                            s.accounts
+                              .filter((a) => a.kind === "saving")
+                              .reduce(
+                                (n, a) => n + balance(a, s.transactions, p.end),
+                                0,
+                              ),
+                          )}
+                        </h2>
+                      </div>
+                      <button
+                        aria-label="ดูเงินออม"
+                        className="icon-button"
+                        onClick={() => setPage("savings")}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                    <div className="summary-item">
+                      <span className="pixel-box">
+                        <Pixel name="crystal" />
+                      </span>
+                      <div>
+                        <small>หนี้สิน / บัตรเครดิต ณ สิ้นรอบ</small>
+                        <h2>฿{money(sum.debt)}</h2>
+                      </div>
+                      <button
+                        aria-label="ดูหนี้สิน"
+                        className="icon-button"
+                        onClick={() => setPage("debts")}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                    <p className="gentle-note">ทุกก้าวเล็ก ๆ มีความหมายเสมอ ✧</p>
+                  </section>
+                </div>
+                {page === "reports" && (
+                  <section className="card">
+                    <h3>เปรียบเทียบรอบบัญชี</h3>
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>รอบ</th>
+                            <th>รายรับ</th>
+                            <th>รายจ่าย</th>
+                            <th>สุทธิ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {s.periods.map((x) => {
+                            const z = summary(s, x);
+                            return (
+                              <tr key={x.id}>
+                                <td>{x.name}</td>
+                                <td className="income">฿{money(z.income)}</td>
+                                <td className="expense">฿{money(z.expense)}</td>
+                                <td>฿{money(z.flow)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+            {(page === "dashboard" || page === "transactions") && (
+              <section className="card transactions-card">
+                <div className="card-heading">
+                  <h3>
+                    {page === "dashboard" ? "รายการล่าสุด" : "รายการธุรกรรม"}{" "}
+                    <span className="count">
+                      {page === "dashboard"
+                        ? sum.tx.length
+                        : transactions.length}
+                    </span>
+                  </h3>
+                  {page === "dashboard" && (
+                    <button
+                      className="text-button"
+                      onClick={() => setPage("transactions")}
                     >
                       ดูทั้งหมด <ChevronRight size={14} />
                     </button>
-                  </div>
-                  {budgetCards()}
-                  <button
-                    className="text-button"
-                    onClick={() => setModal({ type: "budget" })}
-                  >
-                    <Plus size={14} /> ตั้งงบประมาณ
-                  </button>
-                </section>
-                <section className="card goals-summary">
-                  <div className="card-heading">
-                    <h3>เติบโตทีละนิด</h3>
-                    <Leaf size={18} />
-                  </div>
-                  <div className="summary-item">
-                    <span className="pixel-box blue">
-                      <Pixel name="chest" />
-                    </span>
-                    <div>
-                      <small>เงินออมสะสม ณ สิ้นรอบ</small>
-                      <h2>
-                        ฿
-                        {money(
-                          s.accounts
-                            .filter((a) => a.kind === "saving")
-                            .reduce(
-                              (n, a) => n + balance(a, s.transactions, p.end),
-                              0,
-                            ),
-                        )}
-                      </h2>
-                    </div>
-                    <button
-                      aria-label="ดูเงินออม"
-                      className="icon-button"
-                      onClick={() => setPage("savings")}
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-                  <div className="summary-item">
-                    <span className="pixel-box">
-                      <Pixel name="crystal" />
-                    </span>
-                    <div>
-                      <small>หนี้สิน / บัตรเครดิต ณ สิ้นรอบ</small>
-                      <h2>฿{money(sum.debt)}</h2>
-                    </div>
-                    <button
-                      aria-label="ดูหนี้สิน"
-                      className="icon-button"
-                      onClick={() => setPage("debts")}
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-                  <p className="gentle-note">ทุกก้าวเล็ก ๆ มีความหมายเสมอ ✧</p>
-                </section>
-              </div>
-              {page === "reports" && (
-                <section className="card">
-                  <h3>เปรียบเทียบรอบบัญชี</h3>
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>รอบ</th>
-                          <th>รายรับ</th>
-                          <th>รายจ่าย</th>
-                          <th>สุทธิ</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {s.periods.map((x) => {
-                          const z = summary(s, x);
-                          return (
-                            <tr key={x.id}>
-                              <td>{x.name}</td>
-                              <td className="income">฿{money(z.income)}</td>
-                              <td className="expense">฿{money(z.expense)}</td>
-                              <td>฿{money(z.flow)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              )}
-            </>
-          )}
-          {(page === "dashboard" || page === "transactions") && (
-            <section className="card transactions-card">
-              <div className="card-heading">
-                <h3>
-                  {page === "dashboard" ? "รายการล่าสุด" : "รายการธุรกรรม"}{" "}
-                  <span className="count">
-                    {page === "dashboard" ? sum.tx.length : transactions.length}
-                  </span>
-                </h3>
-                {page === "dashboard" && (
-                  <button
-                    className="text-button"
-                    onClick={() => setPage("transactions")}
-                  >
-                    ดูทั้งหมด <ChevronRight size={14} />
-                  </button>
-                )}
-              </div>
-              {page === "transactions" && (
-                <div className="filters">
-                  <label className="search">
-                    <Search size={17} />
-                    <input
-                      placeholder="ค้นหาชื่อ หมายเหตุ แท็ก…"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                    />
-                  </label>
-                  <select
-                    aria-label="กรองประเภท"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                  >
-                    <option value="">ทุกประเภท</option>
-                    {["income", "expense", "transfer", "adjustment"].map(
-                      (k) => (
-                        <option key={k} value={k}>
-                          {kindLabels[k]}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                  <select
-                    aria-label="กรองบัญชี"
-                    value={accountFilter}
-                    onChange={(e) => setAccountFilter(e.target.value)}
-                  >
-                    <option value="">ทุกบัญชี</option>
-                    {s.accounts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="กรองหมวดหมู่"
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                  >
-                    <option value="">ทุกหมวดหมู่</option>
-                    {s.categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.parentId ? "↳ " : ""}
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="เรียงลำดับ"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                  >
-                    <option value="desc">ใหม่สุดก่อน</option>
-                    <option value="asc">เก่าสุดก่อน</option>
-                    <option value="amount">จำนวนมากก่อน</option>
-                  </select>
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={allDates}
-                      onChange={(e) => setAllDates(e.target.checked)}
-                    />{" "}
-                    ทุกวันที่
-                  </label>
+                  )}
                 </div>
-              )}
-              {txRows(
-                page === "dashboard"
-                  ? sum.tx
-                      .slice()
-                      .sort((a, b) => b.date.localeCompare(a.date))
-                      .slice(0, 5)
-                  : transactions,
-              )}
-            </section>
-          )}
-          {page === "categories" && (
-            <>
-              <div className="section-intro">
-                <p>หมวดหลักและหมวดย่อยอ้างอิงด้วย ID รายการเดิมจึงยังอยู่เมื่อเปลี่ยนชื่อ</p>
-                <button
-                  className="soft-button"
-                  onClick={() => setModal({ type: "category" })}
-                >
-                  <Plus size={16} /> สร้างหมวดหมู่
-                </button>
-              </div>
-              <div className="entity-grid">
-                {s.categories
-                  .filter((c) => !c.parentId)
-                  .sort((a, b) => a.order - b.order)
-                  .map((c) => (
-                    <section key={c.id} className="card category-card">
-                      <div className="spread">
-                        <span className="pixel-box" style={{ color: c.color }}>
-                          <Pixel name={c.icon} />
-                        </span>
+                {page === "transactions" && (
+                  <div className="filters">
+                    <label className="search">
+                      <Search size={17} />
+                      <input
+                        placeholder="ค้นหาชื่อ หมายเหตุ แท็ก…"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                      />
+                    </label>
+                    <select
+                      aria-label="กรองประเภท"
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                    >
+                      <option value="">ทุกประเภท</option>
+                      {["income", "expense", "transfer", "adjustment"].map(
+                        (k) => (
+                          <option key={k} value={k}>
+                            {kindLabels[k]}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                    <select
+                      aria-label="กรองบัญชี"
+                      value={accountFilter}
+                      onChange={(e) => setAccountFilter(e.target.value)}
+                    >
+                      <option value="">ทุกบัญชี</option>
+                      {s.accounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      aria-label="กรองหมวดหมู่"
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                    >
+                      <option value="">ทุกหมวดหมู่</option>
+                      {s.categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.parentId ? "↳ " : ""}
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      aria-label="เรียงลำดับ"
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value)}
+                    >
+                      <option value="desc">ใหม่สุดก่อน</option>
+                      <option value="asc">เก่าสุดก่อน</option>
+                      <option value="amount">จำนวนมากก่อน</option>
+                    </select>
+                    <label className="check">
+                      <input
+                        type="checkbox"
+                        checked={allDates}
+                        onChange={(e) => setAllDates(e.target.checked)}
+                      />{" "}
+                      ทุกวันที่
+                    </label>
+                  </div>
+                )}
+                {txRows(
+                  page === "dashboard"
+                    ? sum.tx
+                        .slice()
+                        .sort((a, b) => b.date.localeCompare(a.date))
+                        .slice(0, 5)
+                    : transactions,
+                )}
+              </section>
+            )}
+            {page === "categories" && (
+              <>
+                <div className="section-intro">
+                  <p>หมวดหลักและหมวดย่อยอ้างอิงด้วย ID รายการเดิมจึงยังอยู่เมื่อเปลี่ยนชื่อ</p>
+                  <button
+                    className="soft-button"
+                    onClick={() => setModal({ type: "category" })}
+                  >
+                    <Plus size={16} /> สร้างหมวดหมู่
+                  </button>
+                </div>
+                <div className="entity-grid">
+                  {s.categories
+                    .filter((c) => !c.parentId)
+                    .sort((a, b) => a.order - b.order)
+                    .map((c) => (
+                      <section key={c.id} className="card category-card">
+                        <div className="spread">
+                          <span
+                            className="pixel-box"
+                            style={{ color: c.color }}
+                          >
+                            <Pixel name={categoryIcon(c)} />
+                          </span>
+                          <button
+                            className="icon-button"
+                            aria-label={"แก้ไข " + c.name}
+                            onClick={() =>
+                              setModal({ type: "category", value: c })
+                            }
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </div>
+                        <h3>
+                          {c.name} {c.archived && <small>(เก็บถาวร)</small>}
+                        </h3>
+                        <small className="muted">{kindLabels[c.kind]}</small>
+                        <div className="child-cats">
+                          {s.categories
+                            .filter((x) => x.parentId === c.id)
+                            .sort((a, b) => a.order - b.order)
+                            .map((x) => (
+                              <button
+                                key={x.id}
+                                onClick={() =>
+                                  setModal({ type: "category", value: x })
+                                }
+                              >
+                                {x.name}
+                                {x.archived ? " · เก็บถาวร" : ""}
+                                <Pencil size={12} />
+                              </button>
+                            ))}
+                        </div>
                         <button
-                          className="icon-button"
-                          aria-label={"แก้ไข " + c.name}
+                          className="text-button"
                           onClick={() =>
-                            setModal({ type: "category", value: c })
+                            setModal({
+                              type: "category",
+                              value: {
+                                ...c,
+                                id: uid(),
+                                name: "",
+                                parentId: c.id,
+                                order: s.categories.length,
+                              },
+                            })
                           }
                         >
-                          <Pencil size={16} />
+                          <Plus size={14} /> เพิ่มหมวดย่อย
                         </button>
+                      </section>
+                    ))}
+                </div>
+              </>
+            )}
+            {page === "accounts" && (
+              <>
+                <div className="section-intro">
+                  <p>
+                    {page === "accounts"
+                      ? "ยอดสะสมถึงวันนี้ · ยอดเริ่มต้นใช้เป็นฐานก่อนรายการทั้งหมด"
+                      : "ซื้อด้วยบัตร = รายจ่าย · ชำระบิล = โอนจากธนาคารเข้าบัตร"}
+                  </p>
+                  <button
+                    className="soft-button"
+                    onClick={() => setModal({ type: "account" })}
+                  >
+                    <Plus size={16} /> เพิ่มบัญชี
+                  </button>
+                </div>
+                <div className="entity-grid">
+                  {s.accounts.map((a) => (
+                    <section className="card account-card" key={a.id}>
+                      <div className="spread">
+                        <span className="pixel-box" style={{ color: a.color }}>
+                          <Pixel name={a.icon} />
+                        </span>
+                        <span className="tag">{kindLabels[a.kind]}</span>
                       </div>
                       <h3>
-                        {c.name} {c.archived && <small>(เก็บถาวร)</small>}
+                        {a.name} {!a.active && <small>(พักใช้งาน)</small>}
                       </h3>
-                      <small className="muted">{kindLabels[c.kind]}</small>
-                      <div className="child-cats">
-                        {s.categories
-                          .filter((x) => x.parentId === c.id)
-                          .sort((a, b) => a.order - b.order)
-                          .map((x) => (
-                            <button
-                              key={x.id}
-                              onClick={() =>
-                                setModal({ type: "category", value: x })
-                              }
-                            >
-                              {x.name}
-                              {x.archived ? " · เก็บถาวร" : ""}
-                              <Pencil size={12} />
-                            </button>
-                          ))}
-                      </div>
-                      <button
-                        className="text-button"
-                        onClick={() =>
-                          setModal({
-                            type: "category",
-                            value: {
-                              ...c,
-                              id: uid(),
-                              name: "",
-                              parentId: c.id,
-                              order: s.categories.length,
-                            },
-                          })
-                        }
-                      >
-                        <Plus size={14} /> เพิ่มหมวดย่อย
-                      </button>
-                    </section>
-                  ))}
-              </div>
-            </>
-          )}
-          {page === "accounts" && (
-            <>
-              <div className="section-intro">
-                <p>
-                  {page === "accounts"
-                    ? "ยอดสะสมถึงวันนี้ · ยอดเริ่มต้นใช้เป็นฐานก่อนรายการทั้งหมด"
-                    : "ซื้อด้วยบัตร = รายจ่าย · ชำระบิล = โอนจากธนาคารเข้าบัตร"}
-                </p>
-                <button
-                  className="soft-button"
-                  onClick={() => setModal({ type: "account" })}
-                >
-                  <Plus size={16} /> เพิ่มบัญชี
-                </button>
-              </div>
-              <div className="entity-grid">
-                {s.accounts.map((a) => (
-                  <section className="card account-card" key={a.id}>
-                    <div className="spread">
-                      <span className="pixel-box" style={{ color: a.color }}>
-                        <Pixel name={a.icon} />
-                      </span>
-                      <span className="tag">{kindLabels[a.kind]}</span>
-                    </div>
-                    <h3>
-                      {a.name} {!a.active && <small>(พักใช้งาน)</small>}
-                    </h3>
-                    <h2>฿{money(balance(a, s.transactions, today()))}</h2>
-                    <small className="muted">
-                      {isLiability(a) ? "ยอดหนี้คงค้าง" : "ยอดเงินสะสม"} · THB
-                    </small>
-                    <div className="card-footer">
-                      <button
-                        className="text-button"
-                        onClick={() => setModal({ type: "account", value: a })}
-                      >
-                        <Pencil size={14} /> แก้ไข
-                      </button>
-                      <button
-                        className="text-button"
-                        onClick={() =>
-                          setModal({
-                            type: "transaction",
-                            value: {
-                              ...emptyTx(),
-                              accountId: isLiability(a) ? "bank" : a.id,
-                              toAccountId: isLiability(a) ? a.id : "",
-                              kind: isLiability(a) ? "transfer" : "adjustment",
-                              title: isLiability(a)
-                                ? "ชำระ " + a.name
-                                : "ปรับยอด " + a.name,
-                            },
-                          })
-                        }
-                      >
-                        {isLiability(a) ? "ชำระหนี้" : "ปรับยอด"}{" "}
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </>
-          )}
-          {page === "debts" && <Debts s={s} act={act} />}
-          {page === "periods" && (
-            <>
-              <div className="section-intro">
-                <p>เลือกรอบเงินเดือน เดือนปฏิทิน หรือกำหนดวันเอง · วันที่แสดงเป็น พ.ศ.</p>
-                <button
-                  className="soft-button"
-                  onClick={() => setModal({ type: "period" })}
-                >
-                  <Plus size={16} /> สร้างรอบบัญชี
-                </button>
-              </div>
-              <div className="entity-grid">
-                {s.periods
-                  .slice()
-                  .sort((a, b) => b.start.localeCompare(a.start))
-                  .map((x) => (
-                    <section className="card" key={x.id}>
-                      <div className="spread">
-                        <CalendarDays className="muted" />
-                        <span className="tag">
-                          {x.kind === "salary"
-                            ? "รอบเงินเดือน"
-                            : x.kind === "calendar"
-                              ? "เดือนปฏิทิน"
-                              : "กำหนดเอง"}
-                        </span>
-                      </div>
-                      <h3>{x.name}</h3>
-                      <p>
-                        {thaiDate(x.start, true)} — {thaiDate(x.end, true)}
-                      </p>
-                      {periodWarnings(x, s.periods).map((w) => (
-                        <small className="warning" key={w}>
-                          {w}
-                        </small>
-                      ))}
+                      <h2>฿{money(balance(a, s.transactions, today()))}</h2>
+                      <small className="muted">
+                        {isLiability(a) ? "ยอดหนี้คงค้าง" : "ยอดเงินสะสม"} · THB
+                      </small>
                       <div className="card-footer">
                         <button
                           className="text-button"
-                          onClick={() => setModal({ type: "period", value: x })}
+                          onClick={() =>
+                            setModal({ type: "account", value: a })
+                          }
                         >
                           <Pencil size={14} /> แก้ไข
                         </button>
                         <button
                           className="text-button"
                           onClick={() =>
-                            setModal({ type: "period", value: nextPeriod(x) })
+                            setModal({
+                              type: "transaction",
+                              value: {
+                                ...emptyTx(),
+                                accountId: isLiability(a) ? "bank" : a.id,
+                                toAccountId: isLiability(a) ? a.id : "",
+                                kind: isLiability(a)
+                                  ? "transfer"
+                                  : "adjustment",
+                                title: isLiability(a)
+                                  ? "ชำระ " + a.name
+                                  : "ปรับยอด " + a.name,
+                              },
+                            })
                           }
                         >
-                          <Copy size={14} /> รอบถัดไป
+                          {isLiability(a) ? "ชำระหนี้" : "ปรับยอด"}{" "}
+                          <ChevronRight size={14} />
                         </button>
                       </div>
                     </section>
                   ))}
-              </div>
-            </>
-          )}
-          {page === "budgets" && (
-            <section className="card">
-              <div className="card-heading">
-                <h3>งบประมาณของ {p.name}</h3>
-                <button
-                  className="soft-button"
-                  onClick={() => setModal({ type: "budget" })}
-                >
-                  <Plus size={16} /> ตั้งงบ
-                </button>
-              </div>
-              {budgetCards()}
-              <p className="info-note">
-                งบหมวดหลักรวมรายการของหมวดย่อย หากตั้งทั้งสองระดับ จะใช้เปรียบเทียบแยกกัน
-              </p>
-            </section>
-          )}
-          {page === "savings" && (
-            <>
-              <div className="section-intro">
-                <p>เป้าหมายผูกกับยอดบัญชีออมทรัพย์ · โอนเงินเพื่อออมโดยไม่เพิ่มรายจ่าย</p>
-                <button
-                  className="soft-button"
-                  onClick={() => setModal({ type: "goal" })}
-                >
-                  <Plus size={16} /> เพิ่มเป้าหมาย
-                </button>
-              </div>
-              <div className="entity-grid">
-                {s.goals.map((g) => {
-                  const value = balance(
-                    acc(g.accountId)!,
-                    s.transactions,
-                    today(),
-                  );
-                  return (
-                    <section className="card" key={g.id}>
-                      <div className="spread">
-                        <Pixel name="chest" size={48} />
-                        <button
-                          className="icon-button"
-                          aria-label={"แก้ไข " + g.name}
-                          onClick={() => setModal({ type: "goal", value: g })}
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      </div>
-                      <h3>{g.name}</h3>
-                      <h2>฿{money(value)}</h2>
-                      <p className="muted">จากเป้าหมาย ฿{money(g.target)}</p>
-                      <div className="progress">
-                        <i
-                          style={{
-                            width:
-                              Math.max(
-                                0,
-                                Math.min(100, (value / g.target) * 100),
-                              ) + "%",
-                          }}
-                        />
-                      </div>
-                      <small>
-                        เหลืออีก ฿{money(Math.max(0, g.target - value))} ·{" "}
-                        {Math.round((value / g.target) * 100)}%
-                      </small>
-                      <p className="muted tiny">
-                        {acc(g.accountId)?.name} ·
-                        เป้าหมายที่ใช้บัญชีเดียวกันจะแสดงยอดเดียวกัน
-                      </p>
-                    </section>
-                  );
-                })}
-              </div>
-              {!s.goals.length && (
-                <div className="card empty">
-                  <Pixel name="flower" size={70} />
-                  <h3>ปลูกเป้าหมายเล็ก ๆ ของคุณ</h3>
-                  <p>สร้างบัญชีประเภทออมทรัพย์ แล้วเริ่มต้นเป้าหมายแรก</p>
+                </div>
+              </>
+            )}
+            {page === "debts" && <Debts s={s} act={act} />}
+            {page === "periods" && (
+              <>
+                <div className="section-intro">
+                  <p>เลือกรอบเงินเดือน เดือนปฏิทิน หรือกำหนดวันเอง · วันที่แสดงเป็น พ.ศ.</p>
                   <button
                     className="soft-button"
-                    onClick={() => setModal({ type: "account" })}
+                    onClick={() => setModal({ type: "period" })}
                   >
-                    สร้างบัญชีออมทรัพย์
+                    <Plus size={16} /> สร้างรอบบัญชี
                   </button>
                 </div>
-              )}
-            </>
-          )}
-          {page === "backup" && (
-            <div className="backup-grid">
+                <div className="entity-grid">
+                  {s.periods
+                    .slice()
+                    .sort((a, b) => b.start.localeCompare(a.start))
+                    .map((x) => (
+                      <section className="card" key={x.id}>
+                        <div className="spread">
+                          <CalendarDays className="muted" />
+                          <span className="tag">
+                            {x.kind === "salary"
+                              ? "รอบเงินเดือน"
+                              : x.kind === "calendar"
+                                ? "เดือนปฏิทิน"
+                                : "กำหนดเอง"}
+                          </span>
+                        </div>
+                        <h3>{x.name}</h3>
+                        <p>
+                          {thaiDate(x.start, true)} — {thaiDate(x.end, true)}
+                        </p>
+                        {periodWarnings(x, s.periods).map((w) => (
+                          <small className="warning" key={w}>
+                            {w}
+                          </small>
+                        ))}
+                        <div className="card-footer">
+                          <button
+                            className="text-button"
+                            onClick={() =>
+                              setModal({ type: "period", value: x })
+                            }
+                          >
+                            <Pencil size={14} /> แก้ไข
+                          </button>
+                          <button
+                            className="text-button"
+                            onClick={() =>
+                              setModal({ type: "period", value: nextPeriod(x) })
+                            }
+                          >
+                            <Copy size={14} /> รอบถัดไป
+                          </button>
+                        </div>
+                      </section>
+                    ))}
+                </div>
+              </>
+            )}
+            {page === "budgets" && (
               <section className="card">
-                <span className="pixel-box">
-                  <Pixel name="book" />
-                </span>
-                <h3>สำรองสมุดบัญชี</h3>
-                <p className="muted">
-                  ดาวน์โหลด JSON รวมบัญชี หมวดหมู่ รายการ รอบ งบประมาณ และเป้าหมาย
+                <div className="card-heading">
+                  <h3>งบประมาณของ {p.name}</h3>
+                  <button
+                    className="soft-button"
+                    onClick={() => setModal({ type: "budget" })}
+                  >
+                    <Plus size={16} /> ตั้งงบ
+                  </button>
+                </div>
+                {budgetCards()}
+                <p className="info-note">
+                  งบหมวดหลักรวมรายการของหมวดย่อย หากตั้งทั้งสองระดับ จะใช้เปรียบเทียบแยกกัน
                 </p>
-                <button
-                  className="primary"
-                  onClick={async () => {
-                    download(
-                      backupData(s),
-                      "witchy-ledger-" + today() + ".json",
-                    );
-                    setNotice("ดาวน์โหลดข้อมูลสำรองแล้ว");
-                  }}
-                >
-                  <Download size={17} /> สำรองข้อมูลทั้งหมด
-                </button>
-                <hr />
-                <h3>ส่งออกรายการ CSV</h3>
-                <p className="muted">รายการทั้งหมด เปิดอ่านในโปรแกรมตารางคำนวณได้</p>
-                <button
-                  className="soft-button"
-                  onClick={async () => {
-                    const rows = [
-                      [
-                        "ID",
-                        "วันที่",
-                        "ประเภท",
-                        "ชื่อรายการ",
-                        "จำนวนบาท",
-                        "บัญชี",
-                        "บัญชีปลายทาง",
-                        "หมวดหมู่",
-                        "หมายเหตุ",
-                        "แท็ก",
-                      ],
-                      ...s.transactions.map((t) => [
-                        t.id,
-                        t.date,
-                        kindLabels[t.kind],
-                        t.title,
-                        (t.amount / 100).toFixed(2),
-                        acc(t.accountId)?.name || "",
-                        acc(t.toAccountId)?.name || "",
-                        cat(t.categoryId)?.name || "",
-                        t.note,
-                        t.tags,
-                      ]),
-                    ];
-                    const csv = rows
-                      .map((row) =>
-                        row
-                          .map(
-                            (v) =>
-                              '"' +
-                              String(v)
-                                .replace(/^[=+@\-\t\r]/, "'$&")
-                                .replaceAll('"', '""') +
-                              '"',
-                          )
-                          .join(","),
-                      )
-                      .join("\r\n");
-                    download(
-                      "\uFEFF" + csv,
-                      "witchy-transactions-" + today() + ".csv",
-                      "text/csv;charset=utf-8",
-                    );
-                  }}
-                >
-                  <Download size={17} /> ส่งออก CSV
-                </button>
               </section>
-              <section className="card">
-                <span className="pixel-box">
-                  <Pixel name="potion" />
-                </span>
-                <h3>กู้คืนจากไฟล์สำรอง</h3>
-                <p className="muted">
-                  ตรวจไฟล์และแสดงจำนวนข้อมูลก่อนแทนที่ข้อมูลปัจจุบัน กรุณาสำรองข้อมูลเดิมก่อน
-                </p>
-                <label className="upload-box">
-                  <Upload size={24} />
-                  <b>เลือกไฟล์สำรอง .json</b>
-                  <small>ประมวลผลในเครื่องเท่านั้น</small>
-                  <input
-                    type="file"
-                    accept=".json,application/json"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      try {
-                        if (file.size > 20 * 1024 * 1024)
-                          throw Error("ไฟล์ต้องไม่เกิน 20 MB");
-                        setPending(parseBackup(await file.text()));
-                      } catch (err) {
-                        setError((err as Error).message);
-                      }
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-                {pending && (
-                  <div className="restore-preview">
-                    <h4>พร้อมกู้คืน</h4>
-                    <p>
-                      {pending.accounts.length} บัญชี ·{" "}
-                      {pending.transactions.length} รายการ ·{" "}
-                      {pending.periods.length} รอบ
-                    </p>
+            )}
+            {page === "savings" && (
+              <>
+                <div className="section-intro">
+                  <p>เป้าหมายผูกกับยอดบัญชีออมทรัพย์ · โอนเงินเพื่อออมโดยไม่เพิ่มรายจ่าย</p>
+                  <button
+                    className="soft-button"
+                    onClick={() => setModal({ type: "goal" })}
+                  >
+                    <Plus size={16} /> เพิ่มเป้าหมาย
+                  </button>
+                </div>
+                <div className="entity-grid">
+                  {s.goals.map((g) => {
+                    const value = balance(
+                      acc(g.accountId)!,
+                      s.transactions,
+                      today(),
+                    );
+                    return (
+                      <section className="card" key={g.id}>
+                        <div className="spread">
+                          <Pixel name="chest" size={48} />
+                          <button
+                            className="icon-button"
+                            aria-label={"แก้ไข " + g.name}
+                            onClick={() => setModal({ type: "goal", value: g })}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </div>
+                        <h3>{g.name}</h3>
+                        <h2>฿{money(value)}</h2>
+                        <p className="muted">จากเป้าหมาย ฿{money(g.target)}</p>
+                        <div className="progress">
+                          <i
+                            style={{
+                              width:
+                                Math.max(
+                                  0,
+                                  Math.min(100, (value / g.target) * 100),
+                                ) + "%",
+                            }}
+                          />
+                        </div>
+                        <small>
+                          เหลืออีก ฿{money(Math.max(0, g.target - value))} ·{" "}
+                          {Math.round((value / g.target) * 100)}%
+                        </small>
+                        <p className="muted tiny">
+                          {acc(g.accountId)?.name} ·
+                          เป้าหมายที่ใช้บัญชีเดียวกันจะแสดงยอดเดียวกัน
+                        </p>
+                      </section>
+                    );
+                  })}
+                </div>
+                {!s.goals.length && (
+                  <div className="card empty">
+                    <Pixel name="flower" size={70} />
+                    <h3>ปลูกเป้าหมายเล็ก ๆ ของคุณ</h3>
+                    <p>สร้างบัญชีประเภทออมทรัพย์ แล้วเริ่มต้นเป้าหมายแรก</p>
                     <button
-                      className="primary"
-                      onClick={async () => {
-                        if (await askConfirm("แทนที่ข้อมูลปัจจุบันทั้งหมดด้วยไฟล์นี้?"))
-                          void act(async () => {
-                            await restore(pending);
-                            setPending(null);
-                            setPeriodId("");
-                          }, "กู้คืนข้อมูลแล้ว");
-                      }}
+                      className="soft-button"
+                      onClick={() => setModal({ type: "account" })}
                     >
-                      ยืนยันแทนที่ข้อมูล
-                    </button>
-                    <button
-                      className="text-button"
-                      onClick={() => setPending(null)}
-                    >
-                      ยกเลิก
+                      สร้างบัญชีออมทรัพย์
                     </button>
                   </div>
                 )}
-                <p className="info-note">
-                  ยังไม่มีไฟล์ income_expense_ledger.xlsx ใน workspace
-                  กรุณาแนบไฟล์เมื่อต้องการพัฒนาและตรวจ mapping สำหรับนำเข้า Excel ใน
-                  Phase 3
+              </>
+            )}
+            {page === "backup" && (
+              <div className="backup-grid">
+                <section className="card">
+                  <span className="pixel-box">
+                    <Pixel name="book" />
+                  </span>
+                  <h3>สำรองสมุดบัญชี</h3>
+                  <p className="muted">
+                    ดาวน์โหลด JSON รวมบัญชี หมวดหมู่ รายการ รอบ งบประมาณ และเป้าหมาย
+                  </p>
+                  <button
+                    className="primary"
+                    onClick={async () => {
+                      download(
+                        backupData(s),
+                        "witchy-ledger-" + today() + ".json",
+                      );
+                      setNotice("ดาวน์โหลดข้อมูลสำรองแล้ว");
+                    }}
+                  >
+                    <Download size={17} /> สำรองข้อมูลทั้งหมด
+                  </button>
+                  <hr />
+                  <h3>ส่งออกรายการ CSV</h3>
+                  <p className="muted">
+                    รายการทั้งหมด เปิดอ่านในโปรแกรมตารางคำนวณได้
+                  </p>
+                  <button
+                    className="soft-button"
+                    onClick={async () => {
+                      const rows = [
+                        [
+                          "ID",
+                          "วันที่",
+                          "ประเภท",
+                          "ชื่อรายการ",
+                          "จำนวนบาท",
+                          "บัญชี",
+                          "บัญชีปลายทาง",
+                          "หมวดหมู่",
+                          "หมายเหตุ",
+                          "แท็ก",
+                        ],
+                        ...s.transactions.map((t) => [
+                          t.id,
+                          t.date,
+                          kindLabels[t.kind],
+                          t.title,
+                          (t.amount / 100).toFixed(2),
+                          acc(t.accountId)?.name || "",
+                          acc(t.toAccountId)?.name || "",
+                          cat(t.categoryId)?.name || "",
+                          t.note,
+                          t.tags,
+                        ]),
+                      ];
+                      const csv = rows
+                        .map((row) =>
+                          row
+                            .map(
+                              (v) =>
+                                '"' +
+                                String(v)
+                                  .replace(/^[=+@\-\t\r]/, "'$&")
+                                  .replaceAll('"', '""') +
+                                '"',
+                            )
+                            .join(","),
+                        )
+                        .join("\r\n");
+                      download(
+                        "\uFEFF" + csv,
+                        "witchy-transactions-" + today() + ".csv",
+                        "text/csv;charset=utf-8",
+                      );
+                    }}
+                  >
+                    <Download size={17} /> ส่งออก CSV
+                  </button>
+                </section>
+                <section className="card">
+                  <span className="pixel-box">
+                    <Pixel name="potion" />
+                  </span>
+                  <h3>กู้คืนจากไฟล์สำรอง</h3>
+                  <p className="muted">
+                    ตรวจไฟล์และแสดงจำนวนข้อมูลก่อนแทนที่ข้อมูลปัจจุบัน กรุณาสำรองข้อมูลเดิมก่อน
+                  </p>
+                  <label className="upload-box">
+                    <Upload size={24} />
+                    <b>เลือกไฟล์สำรอง .json</b>
+                    <small>ประมวลผลในเครื่องเท่านั้น</small>
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          if (file.size > 20 * 1024 * 1024)
+                            throw Error("ไฟล์ต้องไม่เกิน 20 MB");
+                          setPending(parseBackup(await file.text()));
+                        } catch (err) {
+                          setError((err as Error).message);
+                        }
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {pending && (
+                    <div className="restore-preview">
+                      <h4>พร้อมกู้คืน</h4>
+                      <p>
+                        {pending.accounts.length} บัญชี ·{" "}
+                        {pending.transactions.length} รายการ ·{" "}
+                        {pending.periods.length} รอบ
+                      </p>
+                      <button
+                        className="primary"
+                        onClick={async () => {
+                          if (await askConfirm("แทนที่ข้อมูลปัจจุบันทั้งหมดด้วยไฟล์นี้?"))
+                            void act(async () => {
+                              await restore(pending);
+                              setPending(null);
+                              setPeriodId("");
+                            }, "กู้คืนข้อมูลแล้ว");
+                        }}
+                      >
+                        ยืนยันแทนที่ข้อมูล
+                      </button>
+                      <button
+                        className="text-button"
+                        onClick={() => setPending(null)}
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  )}
+                  <p className="info-note">
+                    ยังไม่มีไฟล์ income_expense_ledger.xlsx ใน workspace
+                    กรุณาแนบไฟล์เมื่อต้องการพัฒนาและตรวจ mapping สำหรับนำเข้า Excel ใน
+                    Phase 3
+                  </p>
+                </section>
+              </div>
+            )}
+            {page === "settings" && (
+              <section className="card">
+                <h3>ปฏิทินเวทมนตร์</h3>
+                <CalendarThemes s={s} />
+              </section>
+            )}
+            {page === "settings" && (
+              <button
+                className="soft-button"
+                onClick={() => setPage("categories")}
+              >
+                <Pixel name="ui-book" size={24} /> ตั้งค่าหมวดและไอคอน
+              </button>
+            )}
+            {page === "settings" && (
+              <section className="card settings-card">
+                <FantasySettings s={s} />
+                <h3>สมุดบัญชีที่เป็นของคุณ</h3>
+                <button
+                  className="soft-button"
+                  onClick={() => setShowProfile(true)}
+                >
+                  <Character id={profile.avatar} size={35} /> {profile.nickname}{" "}
+                  · แก้ไขตัวละครและชื่อเล่น
+                </button>
+                <p>
+                  <ShieldCheck size={18} /> เก็บข้อมูลใน IndexedDB ของเบราว์เซอร์นี้
+                  ไม่มีระบบล็อกอิน ไม่มี telemetry และไม่มี cloud sync
+                </p>
+                <p>ฟอนต์ Sarabun ถูกติดตั้งมากับแอป ไม่ดึงจาก CDN</p>
+                <p>
+                  หากล้างข้อมูลเว็บไซต์ ข้อมูลอาจหาย ก่อนย้ายเครื่องให้สำรอง JSON
+                  ข้อมูลบนคอมและมือถือยังไม่ซิงก์อัตโนมัติ
+                </p>
+                <p>
+                  ใช้งานออฟไลน์ได้หลังเปิดแอปฉบับ build ผ่าน localhost ครั้งแรกและแคชเสร็จ
+                  โดยใช้ browser และ URL เดิม
+                </p>
+                <hr />
+                <h3>ทดลองใช้งาน</h3>
+                <p className="muted">
+                  เริ่มต้นด้วยข้อมูลว่าง คุณเลือกใส่ข้อมูลตัวอย่างเพื่อทดลอง Dashboard ได้
+                </p>
+                <button
+                  className="soft-button"
+                  disabled={s.transactions.length > 0}
+                  onClick={() => void act(() => loadDemo(), "เพิ่มข้อมูลตัวอย่างแล้ว")}
+                >
+                  <Sparkles size={17} /> เพิ่มข้อมูลตัวอย่าง
+                </button>
+                {isDemo && (
+                  <button
+                    className="danger-button"
+                    onClick={async () => {
+                      if (
+                        await askConfirm(
+                          "ล้างรายการ งบประมาณ และยอดเริ่มต้นทั้งหมดในชุดทดลอง? หากเพิ่มข้อมูลจริงแล้ว กรุณาสำรองก่อน",
+                        )
+                      )
+                        void act(async () => {
+                          await db.transaction(
+                            "rw",
+                            db.transactions,
+                            db.budgets,
+                            db.accounts,
+                            db.settings,
+                            async () => {
+                              await db.transactions.clear();
+                              await db.budgets.clear();
+                              await db.accounts
+                                .toCollection()
+                                .modify({ opening: 0 });
+                              await db.settings.delete("demo");
+                            },
+                          );
+                        }, "ล้างข้อมูลตัวอย่างแล้ว");
+                    }}
+                  >
+                    ล้างชุดข้อมูลทดลอง
+                  </button>
+                )}
+                <hr />
+                <h3>สถานะการพัฒนา</h3>
+                <p>Phase 1 พร้อมทดลองใช้ พร้อมงบประมาณและเป้าหมายออมเบื้องต้น</p>
+                <p className="muted">
+                  รายการประจำเป็นเครื่องหมายกำกับ ยังไม่สร้างรายการให้อัตโนมัติ ส่วน parser
+                  ภาษาไทย นำเข้า/ส่งออก Excel ใบแจ้งยอดบัตร และแยกเงินต้น/ดอกเบี้ย
+                  อยู่ในระยะถัดไป
                 </p>
               </section>
-            </div>
-          )}
-          {page === "settings" && (
-            <section className="card settings-card">
-              <FantasySettings s={s} />
-              <h3>สมุดบัญชีที่เป็นของคุณ</h3>
-              <button
-                className="soft-button"
-                onClick={() => setShowProfile(true)}
-              >
-                <Character id={profile.avatar} size={35} /> {profile.nickname} ·
-                แก้ไขตัวละครและชื่อเล่น
-              </button>
-              <p>
-                <ShieldCheck size={18} /> เก็บข้อมูลใน IndexedDB ของเบราว์เซอร์นี้
-                ไม่มีระบบล็อกอิน ไม่มี telemetry และไม่มี cloud sync
-              </p>
-              <p>ฟอนต์ Sarabun ถูกติดตั้งมากับแอป ไม่ดึงจาก CDN</p>
-              <p>
-                หากล้างข้อมูลเว็บไซต์ ข้อมูลอาจหาย ก่อนย้ายเครื่องให้สำรอง JSON
-                ข้อมูลบนคอมและมือถือยังไม่ซิงก์อัตโนมัติ
-              </p>
-              <p>
-                ใช้งานออฟไลน์ได้หลังเปิดแอปฉบับ build ผ่าน localhost ครั้งแรกและแคชเสร็จ
-                โดยใช้ browser และ URL เดิม
-              </p>
-              <hr />
-              <h3>ทดลองใช้งาน</h3>
-              <p className="muted">
-                เริ่มต้นด้วยข้อมูลว่าง คุณเลือกใส่ข้อมูลตัวอย่างเพื่อทดลอง Dashboard ได้
-              </p>
-              <button
-                className="soft-button"
-                disabled={s.transactions.length > 0}
-                onClick={() => void act(() => loadDemo(), "เพิ่มข้อมูลตัวอย่างแล้ว")}
-              >
-                <Sparkles size={17} /> เพิ่มข้อมูลตัวอย่าง
-              </button>
-              {isDemo && (
-                <button
-                  className="danger-button"
-                  onClick={async () => {
-                    if (
-                      await askConfirm(
-                        "ล้างรายการ งบประมาณ และยอดเริ่มต้นทั้งหมดในชุดทดลอง? หากเพิ่มข้อมูลจริงแล้ว กรุณาสำรองก่อน",
-                      )
-                    )
-                      void act(async () => {
-                        await db.transaction(
-                          "rw",
-                          db.transactions,
-                          db.budgets,
-                          db.accounts,
-                          db.settings,
-                          async () => {
-                            await db.transactions.clear();
-                            await db.budgets.clear();
-                            await db.accounts
-                              .toCollection()
-                              .modify({ opening: 0 });
-                            await db.settings.delete("demo");
-                          },
-                        );
-                      }, "ล้างข้อมูลตัวอย่างแล้ว");
-                  }}
-                >
-                  ล้างชุดข้อมูลทดลอง
-                </button>
-              )}
-              <hr />
-              <h3>สถานะการพัฒนา</h3>
-              <p>Phase 1 พร้อมทดลองใช้ พร้อมงบประมาณและเป้าหมายออมเบื้องต้น</p>
-              <p className="muted">
-                รายการประจำเป็นเครื่องหมายกำกับ ยังไม่สร้างรายการให้อัตโนมัติ ส่วน parser
-                ภาษาไทย นำเข้า/ส่งออก Excel ใบแจ้งยอดบัตร และแยกเงินต้น/ดอกเบี้ย
-                อยู่ในระยะถัดไป
-              </p>
-            </section>
-          )}
-          {(page === "room" || page === "wardrobe") && (
-            <FantasyRoom s={s} wardrobe={page === "wardrobe"} />
-          )}
-          <footer className="main-footer">
-            <span>
-              <ShieldCheck size={13} /> เก็บไว้ในเครื่อง เป็นส่วนตัวเสมอ
-            </span>
-            <span>
-              Made with a little magic <span className="heading-star">✦</span>
-            </span>
-          </footer>
-        </main>
-      </div>
-      <nav className="mobile-nav refreshed-nav">
-        <button
-          onClick={() => setPage("dashboard")}
-          className={page === "dashboard" ? "active" : ""}
-        >
-          <LayoutDashboard size={21} />
-          <span>หน้าหลัก</span>
-        </button>
-        <button onClick={() => setPage("transactions")}>
-          <ArrowRightLeft size={21} />
-          <span>รายการ</span>
-        </button>
-        <button
-          className="central-add"
-          aria-label={quickAdd ? "ปิดเพิ่มรายการ" : "เพิ่มรายรับหรือรายจ่าย"}
-          aria-expanded={quickAdd}
-          onClick={() => {
-            setQuickAdd(!quickAdd);
-            menuSound("equip", fantasy.muted);
-          }}
-        >
-          <Plus
-            size={30}
-            style={{ transform: quickAdd ? "rotate(45deg)" : "" }}
-          />
-        </button>
-        <button onClick={() => setPage("room")}>
-          <BedDouble size={21} />
-          <span>ห้องยูอิ</span>
-        </button>
-        <select
-          aria-label="เมนูเพิ่มเติม"
-          value=""
-          onChange={(e) => e.target.value && setPage(e.target.value)}
-        >
-          <option value="">เพิ่มเติม</option>
-          {nav
-            .filter(
-              (n) => !["dashboard", "transactions", "room"].includes(n[0]),
-            )
-            .map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
-              </option>
-            ))}
-        </select>
-      </nav>
-      {quickAdd && (
-        <RadialEntry
-          s={s}
-          muted={fantasy.muted}
-          close={() => setQuickAdd(false)}
-          choose={async (kind, category, account, amount) => {
-            if (quickSaving.current) return;
-            const c = s.categories.find(
-              (c) => c.id === category && !c.archived && c.kind === kind,
-            );
-            const acc = s.accounts.find((a) => a.id === account && a.active);
-            if (
-              amount !== undefined &&
-              Number.isFinite(amount) &&
-              amount > 0 &&
-              c &&
-              acc
-            ) {
-              quickSaving.current = true;
-              try {
-                const ok = await act(
-                  () =>
-                    saveTransaction({
-                      ...emptyTx(),
-                      kind,
-                      categoryId: c.id,
-                      accountId: acc.id,
-                      amount: satang(String(amount)),
-                      title: c.name,
-                      tags: "#" + c.name,
-                      time: new Date().toTimeString().slice(0, 5),
-                    }),
-                  "บันทึก " + c.name + " " + amount + " บาทแล้ว",
-                );
-                if (ok) setQuickAdd(false);
-              } finally {
-                quickSaving.current = false;
-              }
-            } else {
+            )}
+            {(page === "room" || page === "wardrobe") && (
+              <FantasyRoom s={s} wardrobe={page === "wardrobe"} />
+            )}
+            <footer className="main-footer">
+              <span>
+                <ShieldCheck size={13} /> เก็บไว้ในเครื่อง เป็นส่วนตัวเสมอ
+              </span>
+              <span>
+                Made with a little magic <span className="heading-star">✦</span>
+              </span>
+            </footer>
+          </main>
+        </div>
+        <SceneTransition />
+        <nav
+          className="mobile-nav refreshed-nav"
+          onClickCapture={(e) => {
+            if (quickAdd && !(e.target as Element).closest(".central-add"))
               setQuickAdd(false);
-              setModal({
-                type: "transaction",
-                value: {
-                  ...emptyTx(),
-                  kind,
-                  categoryId: c?.id || "",
-                  accountId: acc?.id || "",
-                },
-              });
-            }
           }}
-        />
-      )}
-      {showProfile && (
-        <Profile
-          settings={s.settings}
-          transactions={s.transactions}
-          close={() => setShowProfile(false)}
-          act={act}
-        />
-      )}
-      {page === "dashboard" && <CompanionWidget s={s} />}
-      {detail && (
-        <DetailSheet
-          key={detail}
-          kind={detail}
-          s={s}
-          period={p}
-          close={() => setDetail(null)}
-        />
-      )}
-      <Confirm />
-      {notice && (
-        <div className="toast" role="status">
-          <Check size={18} />
-          {notice}
-        </div>
-      )}
-      {error && (
-        <div className="error-toast" role="alert">
-          {error}
+        >
           <button
-            className="icon-button"
-            aria-label="ปิดข้อความผิดพลาด"
-            onClick={() => setError("")}
+            onClick={() => setPage("dashboard")}
+            className={page === "dashboard" ? "active" : ""}
           >
-            <X size={17} />
+            <Pixel name="ui-home" size={32} />
+            <span>หน้าหลัก</span>
           </button>
-        </div>
-      )}
-      {modal && (
-        <Editor
-          key={modal.type + (modal.value?.id || "new")}
-          modal={modal}
-          s={s}
-          period={p}
-          close={() => setModal(null)}
-          act={act}
-        />
-      )}
-    </div>
+          <button onClick={() => setPage("transactions")}>
+            <Pixel name="ui-book" size={32} />
+            <span>รายการ</span>
+          </button>
+          <button
+            className="central-add"
+            aria-label={quickAdd ? "ปิดเพิ่มรายการ" : "เพิ่มรายรับหรือรายจ่าย"}
+            aria-expanded={quickAdd}
+            onClick={() => {
+              setQuickAdd(!quickAdd);
+              menuSound("equip", fantasy.muted);
+            }}
+          >
+            <Plus
+              size={30}
+              style={{ transform: quickAdd ? "rotate(45deg)" : "" }}
+            />
+          </button>
+          <button
+            onClick={() => setPage("reports")}
+            className={page === "reports" ? "active" : ""}
+          >
+            <Pixel name="ui-analysis" size={32} />
+            <span>วิเคราะห์</span>
+          </button>
+          <button
+            aria-label="เมนูเพิ่มเติม"
+            aria-expanded={moreOpen}
+            onClick={() => setMoreOpen(!moreOpen)}
+          >
+            <Pixel name="ui-settings" size={32} />
+            <span>เพิ่มเติม</span>
+          </button>
+        </nav>
+        {moreOpen && (
+          <div className="more-menu-overlay" onClick={() => setMoreOpen(false)}>
+            <section
+              className="more-menu"
+              role="dialog"
+              aria-label="เมนูเพิ่มเติม"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header>
+                <h3>✧ สมุดเมนูเวทมนตร์</h3>
+                <button
+                  onClick={() => setMoreOpen(false)}
+                  aria-label="ปิดเมนูเพิ่มเติม"
+                >
+                  ×
+                </button>
+              </header>
+              {nav
+                .filter(
+                  (n) =>
+                    !["dashboard", "transactions", "reports"].includes(n[0]),
+                )
+                .map(([id, label]) => (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      setPage(id);
+                      setMoreOpen(false);
+                      menuSound("select", fantasy.muted);
+                    }}
+                  >
+                    <Pixel
+                      name={
+                        id === "settings"
+                          ? "ui-settings"
+                          : id === "room"
+                            ? "ui-home"
+                            : "ui-book"
+                      }
+                      size={30}
+                    />
+                    {label}
+                  </button>
+                ))}
+            </section>
+          </div>
+        )}
+        {quickAdd && (
+          <RadialEntry
+            s={s}
+            muted={fantasy.muted}
+            close={() => setQuickAdd(false)}
+            choose={async (kind, category, account, amount) => {
+              if (quickSaving.current) return;
+              const c = s.categories.find(
+                (c) => c.id === category && !c.archived && c.kind === kind,
+              );
+              const acc = s.accounts.find((a) => a.id === account && a.active);
+              if (
+                amount !== undefined &&
+                Number.isFinite(amount) &&
+                amount > 0 &&
+                c &&
+                acc
+              ) {
+                const quickId = uid();
+                quickSaving.current = true;
+                try {
+                  const ok = await act(
+                    () =>
+                      saveTransaction({
+                        ...emptyTx(),
+                        id: quickId,
+                        kind,
+                        categoryId: c.id,
+                        accountId: acc.id,
+                        amount: satang(String(amount)),
+                        title: c.name,
+                        tags: "#" + c.name,
+                        time: new Date().toTimeString().slice(0, 5),
+                      }),
+                    "บันทึก " + c.name + " " + amount + " บาทแล้ว",
+                  );
+                  if (ok) {
+                    sceneGust("out");
+                    document.dispatchEvent(new Event("witchy-companion-event"));
+                    setQuickUndo(quickId);
+                    setQuickAdd(false);
+                  }
+                } finally {
+                  quickSaving.current = false;
+                }
+              } else {
+                manualTransition.current = true;
+                setQuickAdd(false);
+                setModal({
+                  type: "transaction",
+                  value: {
+                    ...emptyTx(),
+                    kind,
+                    categoryId: c?.id || "",
+                    accountId: acc?.id || "",
+                  },
+                });
+              }
+            }}
+          />
+        )}
+        {showProfile && (
+          <Profile
+            settings={s.settings}
+            transactions={s.transactions}
+            close={() => setShowProfile(false)}
+            act={act}
+          />
+        )}
+        <CompanionWidget s={s} dashboard={page === "dashboard"} />
+        {detail && (
+          <DetailSheet
+            key={detail}
+            kind={detail}
+            s={s}
+            period={p}
+            close={() => setDetail(null)}
+          />
+        )}
+        <Confirm />
+        {notice && (
+          <div className="toast" role="status">
+            <Check size={18} />
+            {notice}
+            {quickUndo && (
+              <button
+                onClick={() =>
+                  void act(async () => {
+                    await db.transactions.delete(quickUndo);
+                    setQuickUndo("");
+                  }, "ย้อนกลับรายการแล้ว")
+                }
+              >
+                ย้อนกลับ
+              </button>
+            )}
+          </div>
+        )}
+        {error && (
+          <div className="error-toast" role="alert">
+            {error}
+            <button
+              className="icon-button"
+              aria-label="ปิดข้อความผิดพลาด"
+              onClick={() => setError("")}
+            >
+              <X size={17} />
+            </button>
+          </div>
+        )}
+        {modal && (
+          <Editor
+            key={modal.type + (modal.value?.id || "new")}
+            modal={modal}
+            s={s}
+            period={p}
+            close={() => setModal(null)}
+            act={act}
+          />
+        )}
+      </div>
+    </CharacterAppearanceContext.Provider>
   );
 }
 
@@ -1769,7 +1917,7 @@ function Editor({
   modal,
   s,
   period,
-  close,
+  close: closeImmediately,
   act,
 }: {
   modal: NonNullable<Modal>;
@@ -1779,6 +1927,16 @@ function Editor({
   act: (fn: () => Promise<unknown>, message?: string) => Promise<boolean>;
 }) {
   const [busy, setBusy] = useState(false);
+  const [editorLeaving, setEditorLeaving] = useState(false);
+  const editorExit = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const close = () => {
+    if (editorLeaving) return;
+    setEditorLeaving(true);
+    editorExit.current = setTimeout(closeImmediately, 180);
+  };
+  useEffect(() => () => clearTimeout(editorExit.current), []);
   const [kind, setKind] = useState(
     modal.type === "transaction"
       ? modal.value?.kind || "expense"
@@ -1828,11 +1986,7 @@ function Editor({
       }
     };
     addEventListener("keydown", on);
-    setTimeout(
-      () =>
-        document.querySelector<HTMLElement>('[role="dialog"] input')?.focus(),
-      30,
-    );
+
     return () => {
       document.body.style.overflow = old;
       removeEventListener("keydown", on);
@@ -1880,6 +2034,10 @@ function Editor({
           recurring: f.has("recurring"),
         };
         await saveTransaction(t);
+        sceneGust("out");
+        document.dispatchEvent(
+          new CustomEvent("witchy-companion-event", { detail: t }),
+        );
       }
       if (modal.type === "account") {
         const a: Account = {
@@ -2024,7 +2182,7 @@ function Editor({
       ));
   return (
     <div
-      className="modal-overlay"
+      className={"modal-overlay " + (editorLeaving ? "editor-leaving" : "")}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !busy) close();
       }}
@@ -2075,8 +2233,8 @@ function Editor({
                     name="amount"
                     inputMode="decimal"
                     required
-                    placeholder="0.00"
-                    defaultValue={tx ? (tx.amount / 100).toFixed(2) : ""}
+                    placeholder="0"
+                    defaultValue={tx?.amount ? String(tx.amount / 100) : ""}
                   />
                 </div>
               </label>
@@ -2091,12 +2249,7 @@ function Editor({
               <div className="form-grid">
                 <label>
                   วันที่
-                  <input
-                    type="date"
-                    name="date"
-                    required
-                    defaultValue={tx?.date || today()}
-                  />
+                  <MagicDatePicker initial={tx?.date || today()} s={s} />
                 </label>
               </div>
               {["income", "expense"].includes(kind) && (
@@ -2129,9 +2282,11 @@ function Editor({
                         <Pixel
                           name={
                             s.accounts.find((a) => a.id === o.props.value)
-                              ?.icon || "chest"
+                              ?.kind === "bank"
+                              ? "ui-bank"
+                              : "ui-wallet"
                           }
-                          size={30}
+                          size={58}
                         />
                         {s.accounts.find((a) => a.id === o.props.value)?.name}
                       </span>
@@ -2345,7 +2500,7 @@ function Editor({
                       className={icon === n ? "selected" : ""}
                       type="button"
                       key={n}
-                      aria-label={n}
+                      aria-label={iconLabels[n] || n}
                       aria-pressed={icon === n}
                       onClick={() => setIcon(n)}
                     >

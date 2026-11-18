@@ -12,6 +12,8 @@ export type Emotion =
 export type CompanionId = "yui" | "momo";
 export interface FantasyState {
   eyeColor?: string;
+  catEars?: boolean;
+  earrings?: boolean;
   place?: string;
   mode: boolean;
   character: CompanionId;
@@ -34,6 +36,8 @@ export interface FantasyState {
     accessory: string;
     cape: boolean;
     hand: string;
+    catEars?: boolean;
+    earrings?: boolean;
   }[];
   hidden: boolean;
   muted: boolean;
@@ -42,16 +46,16 @@ export interface FantasyState {
   dialogueHistory: string[];
 }
 export const defaults: FantasyState = {
-  mode: false,
+  mode: true,
   character: "yui",
   hair: 0,
   hairColor: "#24202a",
   outfit: 0,
   hat: false,
   glasses: false,
-  accessory: "ribbon",
-  cape: true,
-  hand: "book",
+  accessory: "none",
+  cape: false,
+  hand: "none",
   furniture: ["bed", "clock", "cat"],
   favorites: [],
   hidden: false,
@@ -75,8 +79,8 @@ export const hairstyles = [
   "Scholar Updo",
 ];
 export const outfits = [
-  "นักเรียนเวทมนตร์",
-  "แม่มดฝึกหัด",
+  "เสื้อขาวพื้นฐาน",
+  "ชุดนักเวทมนตร์",
   "แม่มดเริ่มต้น",
   "แม่มดชำนาญการ",
   "แม่มดขั้นสูง",

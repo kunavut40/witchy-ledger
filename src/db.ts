@@ -1,3 +1,4 @@
+import { ensureCategoryCatalog } from "./categoryCatalog";
 import Dexie, { type Table } from "dexie";
 import {
   type State,
@@ -79,7 +80,9 @@ export async function initialize() {
       for (const name of tables) await db.table(name).bulkPut(s[name]);
     },
   );
+  await ensureCategoryCatalog(db);
 }
+
 export function initialState(): State {
   const date = today();
   const month = date.slice(0, 7);

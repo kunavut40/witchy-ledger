@@ -87,9 +87,13 @@ export function ProgressBanner({
 export function ProgressPanel({
   transactions,
   avatar,
+  unlocked = false,
+  previewRank,
 }: {
   transactions: State["transactions"];
   avatar: string;
+  unlocked?: boolean;
+  previewRank?: (index: number) => void;
 }) {
   const p = progression(transactions);
   return (
@@ -135,13 +139,21 @@ export function ProgressPanel({
       <div className="rank-road">
         {ranks.map((r, i) => (
           <div
-            className={i <= p.rankIndex ? "unlocked" : "locked"}
+            className={unlocked || i <= p.rankIndex ? "unlocked" : "locked"}
+            role="button"
+            tabIndex={0}
+            aria-label={"ดูกรอบ " + r.name}
+            onClick={() => {
+              if (unlocked || i <= p.rankIndex) previewRank?.(i);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (unlocked || i <= p.rankIndex))
+                previewRank?.(i);
+            }}
             key={r.name}
           >
             <RankFrame size={64} rankIndex={i}>
-              <span className="rank-gem" style={{ color: r.color }}>
-                ✦
-              </span>
+              <Hero id={avatar} size={64} />
             </RankFrame>
             <b>{r.name}</b>
             <small>LV. {r.level}</small>

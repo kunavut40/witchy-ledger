@@ -1,3 +1,4 @@
+import { testUnlocked } from "./testing";
 import { useState, type FormEvent } from "react";
 import { X, Check } from "lucide-react";
 import { db } from "./db";
@@ -178,13 +179,27 @@ export default function Profile({
                 </select>
               </label>
               <p className="info-note">
-                ชื่อและฉายาเลือกแยกกันได้ ภาพตัวละครใช้เฉพาะยูอิ/โมโมะ
-                เปลี่ยนสีตาได้ในหน้าแต่งตัว ส่วนชุดและทรงผมกำลังเตรียมภาพเพิ่มเติม
+                ชื่อและฉายาเลือกแยกกันได้ ภาพตัวละครใช้เฉพาะยูอิ/โมโมะ ชุด ทรงผม
+                และเครื่องประดับเปลี่ยนได้ในห้องแต่งตัว
               </p>
             </>
           )}
           {tab === "progress" && (
-            <ProgressPanel transactions={transactions} avatar={avatar} />
+            <ProgressPanel
+              transactions={transactions}
+              avatar={avatar}
+              unlocked={testUnlocked({ settings } as State)}
+              previewRank={(index) =>
+                void act(
+                  () =>
+                    db.settings.put({
+                      id: "profile.testRank",
+                      value: String(index),
+                    }),
+                  "เลือกกรอบสำหรับทดสอบแล้ว",
+                )
+              }
+            />
           )}
           {tab === "palette" && (
             <div className="palette-grid">

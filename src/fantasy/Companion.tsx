@@ -29,6 +29,7 @@ export default function Companion({
         size={size}
         emotion={emotion}
         talking={talking}
+        appearance={a}
       />
     </span>
   );

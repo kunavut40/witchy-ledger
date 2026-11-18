@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "assets": [
+    {
+      "path": "public/wardrobe/bodies.png",
+      "format": "PNG",
+      "mode": "RGBA",
+      "width": 2048,
+      "height": 1024,
+      "bytes": 877512,
+      "color_count": ">65535",
+      "has_alpha": true,
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "transparent_pixels": 1731657,
+      "content_bounds": [
+        43,
+        83,
+        1998,
+        1011
+      ],
+      "problems": []
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+[
+  {
+    "path": "public/ui/fantasy-icons-v1.png",
+    "source": "OpenAI imagegen exec-24950813-283a-4e59-8a25-3be474301f7a.png",
+    "license": "AI-generated project artwork",
+    "size": [
+      2048,
+      1536
+    ],
+    "require_alpha": true,
+    "technical_checks_passed": true
+  },
+  {
+    "path": "public/wardrobe/accessories.png",
+    "source": "OpenAI imagegen exec-2dcfedbd-b138-4013-b4fe-6884fa3101db.png",
+    "license": "AI-generated project artwork",
+    "size": [
+      1024,
+      512
+    ],
+    "require_alpha": true,
+    "technical_checks_passed": true
+  },
+  {
+    "path": "public/wardrobe/bodies.png",
+    "source": "OpenAI imagegen exec-9f03c5be-2343-42b2-ac90-a16cdd84ba93.png",
+    "license": "AI-generated project artwork",
+    "size": [
+      2048,
+      1024
+    ],
+    "require_alpha": true,
+    "normalization": "Shared 512px rig: body neck y205, feet490; head chin approximately205",
+    "technical_checks_passed": true
+  },
+  {
+    "path": "public/wardrobe/heads.png",
+    "source": "OpenAI imagegen exec-f46f6957-17ad-4603-bf20-9b1151235ef6.png",
+    "license": "AI-generated project artwork",
+    "size": [
+      2560,
+      1024
+    ],
+    "require_alpha": true,
+    "normalization": "Shared 512px rig: body neck y205, feet490; head chin approximately205",
+    "technical_checks_passed": true
+  },
+  {
+    "path": "public/wardrobe/academy-room.png",
+    "source": "OpenAI imagegen exec-12114845-1182-4db7-9aeb-741707f0042d.png",
+    "license": "AI-generated project artwork",
+    "size": [
+      1536,
+      1024
+    ],
+    "require_alpha": false,
+    "technical_checks_passed": true
+  }
+]

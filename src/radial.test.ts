@@ -24,3 +24,18 @@ it("broken or stale preferences recover and reject negative/invalid prices", () 
   s.settings[s.settings.length - 1].value = "invalid";
   expect(readRadial(s).income).toHaveLength(3);
 });
+
+it("manual third slot never quick-saves a stored price", () => {
+  const s = initialState();
+  s.settings.push({
+    id: "radial.preferences",
+    value: JSON.stringify({
+      expense: [
+        { id: "food-1", prices: [20, 25] },
+        { id: "travel-0", prices: [120, 500] },
+        { id: "other", prices: [100, 200] },
+      ],
+    }),
+  });
+  expect(readRadial(s).expense[2].prices).toEqual([]);
+});

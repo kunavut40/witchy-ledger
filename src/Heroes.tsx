@@ -120,58 +120,41 @@ export function RankFrame({
   size?: number;
   children: ReactNode;
 }) {
-  const r = ranks[rankIndex] || ranks[0];
+  const index =
+    Number.isInteger(rankIndex) && rankIndex >= 0 && rankIndex < ranks.length
+      ? rankIndex
+      : 0;
+  const r = ranks[index];
   return (
     <span
-      className={"rank-frame rank-" + rankIndex}
-      style={{ "--rank": r.color, width: size, height: size } as CSSProperties}
+      className={"rank-frame rank-sprite rank-" + index}
+      data-rank={r.name}
+      style={
+        {
+          "--rank": r.color,
+          "--rank-column": ((index % 4) * 100) / 3 + "%",
+          "--rank-row": index < 4 ? "0%" : "100%",
+          "--rank-period": 4.8 - index * 0.18 + "s",
+          width: size,
+          height: size,
+        } as CSSProperties
+      }
     >
       <span className="rank-portrait">{children}</span>
-      <svg
-        className="rank-ornament"
-        viewBox="0 0 64 64"
-        shapeRendering="crispEdges"
-        aria-hidden="true"
-      >
-        <path
-          d="M16 16 L23 10 H41 L48 16 V42 L42 51 L32 57 L22 51 L16 42Z"
-          fill="none"
-          stroke="#bc9856"
-          strokeWidth="3"
-        />
-        {[0, 1].map((side) => (
-          <g key={side} transform={side ? "translate(64 0) scale(-1 1)" : ""}>
-            <path
-              d="M21 54L12 44L8 28L12 15"
-              fill="none"
-              stroke="#786548"
-              strokeWidth="2"
-            />
-            {[0, 1, 2, 3, 4].map((i) => (
-              <path
-                key={i}
-                d={`M${12 + i * 1.5} ${20 + i * 7} l-8 -7 v7 l7 6 l5 -6 v-6Z`}
-                fill={i % 2 ? "#dce3c3" : r.color}
-                stroke="#85724e"
-                strokeWidth="1"
-              />
-            ))}
-          </g>
-        ))}
-        <path
-          d="M22 12L20 4L28 8L32 1L36 8L44 4L42 12Z"
-          fill="#e6c47c"
-          stroke="#94764a"
-        />
-        <path
-          d="M29 7L32 4L35 7L32 11Z M28 54L32 50L36 54L32 60Z"
-          fill="#c2a1db"
-          stroke="#94764a"
-        />
-      </svg>
+      <span className="rank-artwork" aria-hidden="true" />
+      <span className="rank-rim-light" aria-hidden="true" />
+      <span className="rank-sparkles" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
     </span>
   );
 }
+
 export function Hero({ id, size = 64 }: { id: string; size?: number }) {
   return (
     <span className="portrait-crop" style={{ width: size, height: size }}>

@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "assets": [
+    {
+      "path": "public/ui/fantasy-icons-v1.png",
+      "format": "PNG",
+      "mode": "RGBA",
+      "width": 2048,
+      "height": 1536,
+      "bytes": 2688908,
+      "color_count": ">65535",
+      "has_alpha": true,
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "transparent_pixels": 2154845,
+      "content_bounds": [
+        40,
+        43,
+        2007,
+        1491
+      ],
+      "problems": []
+    }
+  ]
+}

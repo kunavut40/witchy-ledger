@@ -1,4 +1,137 @@
+export const fantasyIconLabels = [
+  "ข้าวจันทร์",
+  "กาแฟอำพัน",
+  "ชามรกต",
+  "น้ำดารา",
+  "เครื่องดื่มชมพู",
+  "ขนมดาว",
+  "ค่าสาธารณูปโภค",
+  "ค่าไฟ",
+  "ค่าน้ำ",
+  "อินเทอร์เน็ต",
+  "แก๊ส",
+  "ของใช้ในบ้าน",
+  "ค่าเช่า",
+  "เดินทาง",
+  "รถส่วนตัว",
+  "น้ำมัน",
+  "ค่ารถ",
+  "รถสาธารณะ",
+  "ซ่อมบำรุง",
+  "การศึกษา",
+  "เครื่องเขียน",
+  "อุปกรณ์เรียน",
+  "หนังสือ",
+  "สุขภาพ",
+  "ยา",
+  "ทันตกรรม",
+  "ประกัน",
+  "ไลฟ์สไตล์",
+  "เกม",
+  "กิจกรรม",
+  "ดนตรี",
+  "ภาพยนตร์",
+  "ช้อปปิ้ง",
+  "เสื้อผ้า",
+  "ความงาม",
+  "สัตว์เลี้ยง",
+  "ของขวัญ",
+  "บริจาค",
+  "ภาษี",
+  "สื่อสาร",
+  "เงินเดือน",
+  "OT",
+  "เบี้ยเลี้ยง",
+  "รายได้เสริม",
+  "ลงทุน",
+  "เงินคืน",
+  "คริสตัลธนาคาร",
+  "หีบเงินสด",
+];
+import type { CSSProperties } from "react";
+export const iconLabels: Record<string, string> = {
+  "ui-income": "ประตูรายรับ",
+  "ui-expense": "กระเป๋ารายจ่าย",
+  "ui-analysis": "ลูกแก้ววิเคราะห์",
+  "ui-settings": "ฟันเฟืองเวทมนตร์",
+  "ui-salary": "ซองเงินเดือน",
+  "ui-allowance": "ถุงเบี้ยเลี้ยง",
+  "ui-book": "สมุดเวทมนตร์",
+  "ui-coffee": "กาแฟ",
+  "ui-fuel": "น้ำมัน",
+  "ui-shopping": "ถุงช้อปปิ้ง",
+  "ui-wallet": "กระเป๋าเงิน",
+  "ui-bank": "ธนาคาร",
+  "ui-food": "อาหาร",
+  "ui-home": "บ้าน",
+  "ui-car": "รถ",
+  "ui-balance": "ตาชั่ง",
+  book: "คัมภีร์",
+  tea: "ถ้วยชา",
+  house: "บ้านเดิม",
+  broom: "ไม้กวาด",
+  crystal: "ผลึก",
+  potion: "ขวดยา",
+  coin: "เหรียญ",
+  moon: "จันทร์",
+  flower: "ดอกไม้",
+  chest: "หีบ",
+  sword: "ดาบ",
+  axe: "ขวาน",
+  claw: "กรงเล็บ",
+  shield: "โล่",
+  staff: "ไม้เท้า",
+  cage: "กรง",
+  bow: "ธนู",
+  rune: "รูน",
+  dagger: "กริช",
+  helmet: "หมวก",
+};
+export const extraArtIcons = [
+  "ui-income",
+  "ui-expense",
+  "ui-analysis",
+  "ui-settings",
+];
+export const artIcons = [
+  "ui-salary",
+  "ui-allowance",
+  "ui-book",
+  "ui-coffee",
+  "ui-fuel",
+  "ui-shopping",
+  "ui-wallet",
+  "ui-bank",
+  "ui-food",
+  "ui-home",
+  "ui-car",
+  "ui-balance",
+];
+export function categoryIcon(c?: { id: string; icon: string }): string {
+  if (!c) return "ui-book";
+  const defaults: Record<string, [string, string]> = {
+    income: ["book", "ui-salary"],
+    "income-0": ["book", "ui-salary"],
+    "income-3": ["book", "ui-allowance"],
+    "income-5": ["book", "ui-book"],
+    food: ["tea", "ui-food"],
+    "food-0": ["tea", "ui-food"],
+    "food-1": ["tea", "ui-coffee"],
+    travel: ["broom", "ui-car"],
+    "travel-0": ["broom", "ui-fuel"],
+    home: ["house", "ui-home"],
+    other: ["potion", "ui-shopping"],
+  };
+  const mapping = defaults[c.id];
+  return mapping && c.icon === mapping[0] ? mapping[1] : c.icon;
+}
+fantasyIconLabels.forEach((label, i) => {
+  iconLabels["fantasy-" + i] = label;
+});
 export const icons = [
+  ...fantasyIconLabels.map((_, i) => "fantasy-" + i),
+  ...extraArtIcons,
+  ...artIcons,
   "book",
   "tea",
   "house",
@@ -27,6 +160,85 @@ export default function Pixel({
   name?: string;
   size?: number;
 }) {
+  const actual =
+    name === "ui-bank"
+      ? "fantasy-46"
+      : name === "ui-wallet" || name === "chest"
+        ? "fantasy-47"
+        : name;
+  const fantasyIndex = actual.startsWith("fantasy-")
+    ? Number(actual.slice(8))
+    : -1;
+  if (Number.isInteger(fantasyIndex) && fantasyIndex >= 0 && fantasyIndex < 48)
+    return (
+      <span
+        className={
+          "pixel-art-icon fantasy-art-icon" +
+          (fantasyIndex === 46
+            ? " crystal-icon"
+            : fantasyIndex === 47
+              ? " treasure-icon"
+              : "")
+        }
+        data-icon={actual}
+        aria-hidden="true"
+        style={
+          {
+            "--icon-size": size + "px",
+            width: size,
+            height: size,
+            backgroundPosition:
+              ((fantasyIndex % 8) * 100) / 7 +
+              "% " +
+              Math.floor(fantasyIndex / 8) * 20 +
+              "%",
+          } as CSSProperties
+        }
+      />
+    );
+  const aliases: Record<string, string> = {
+    book: "ui-book",
+    tea: "ui-coffee",
+    house: "ui-home",
+    broom: "ui-car",
+    potion: "ui-shopping",
+    coin: "ui-allowance",
+    rune: "ui-balance",
+    chest: "ui-wallet",
+  };
+  const extra = extraArtIcons.indexOf(name);
+  if (extra >= 0)
+    return (
+      <span
+        className="pixel-art-icon extra-art-icon"
+        aria-hidden="true"
+        style={
+          {
+            "--icon-size": size + "px",
+            width: size,
+            height: size,
+            backgroundPosition: (extra * 100) / 3 + "% 0%",
+          } as CSSProperties
+        }
+      />
+    );
+  const art = artIcons.indexOf(aliases[name] || name);
+  if (art >= 0)
+    return (
+      <span
+        className="pixel-art-icon"
+        aria-hidden="true"
+        style={
+          {
+            "--icon-size": size + "px",
+            width: size,
+            height: size,
+            backgroundPosition:
+              ((art % 4) * 100) / 3 + "% " + Math.floor(art / 4) * 50 + "%",
+          } as CSSProperties
+        }
+      />
+    );
   const paths: Record<string, string[]> = {
     sword: [
       "M20 2h7v7h-3v4h-3v4h-3v4h-4v-4h-3v-4h4v-4h3V5h2z M8 18h4v4h4v4h-4v-2H8v4H4v-4h4z",

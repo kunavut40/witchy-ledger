@@ -1,4 +1,6 @@
+import { weeklyTotals } from "./spending";
 import {
+  today,
   summary,
   money,
   categorySpend,
@@ -6,7 +8,7 @@ import {
   type Period,
 } from "./domain";
 import type { DetailKind } from "./details";
-import Pixel from "./Pixel";
+import Pixel, { categoryIcon } from "./Pixel";
 export default function CompactHome({
   s,
   p,
@@ -21,7 +23,17 @@ export default function CompactHome({
   const z = summary(s, p);
   const kinds = ["actual", "income", "expense", "flow"] as const;
   const labels = ["เงินคงเหลือจริง", "รายรับรอบนี้", "รายจ่ายรอบนี้", "ยอดสุทธิของรอบ"];
-  const icons = ["book", "coin", "potion", "rune"];
+  const icons = ["ui-book", "ui-allowance", "ui-wallet", "ui-balance"];
+  const anchor =
+    p.end < today() ? p.end : p.start > today() ? p.start : today();
+  const week = weeklyTotals(z.tx, anchor);
+  const highest = Math.max(
+    100,
+    ...week.flatMap((d) => [d.income / 100, d.expense / 100]),
+  );
+  const power = 10 ** Math.floor(Math.log10(highest / 4));
+  const tick = Math.ceil(highest / 4 / power) * power;
+  const ceiling = tick * 4;
   const budgets = s.budgets.filter((b) => b.periodId === p.id).slice(0, 2);
   const recent = [...z.tx]
     .sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt))
@@ -53,6 +65,82 @@ export default function CompactHome({
           </button>
         ))}
       </div>
+      <button
+        className="compact-panel weekly-card"
+        onClick={() => detail("period")}
+        aria-label="ดูรายรับรายจ่ายรายสัปดาห์"
+      >
+        <div className="spread">
+          <h3>รายรับ–รายจ่ายรายสัปดาห์</h3>
+          <span className="week-legend">
+            <i />
+            รายรับ <i />
+            รายจ่าย
+          </span>
+        </div>
+        <svg
+          viewBox="0 0 330 90"
+          role="img"
+          aria-label="กราฟแท่งรายรับและรายจ่าย วันจันทร์ถึงอาทิตย์"
+        >
+          {[0, 1, 2, 3, 4].map((i) => (
+            <g key={i}>
+              <line
+                x1="38"
+                x2="326"
+                y1={8 + i * 15}
+                y2={8 + i * 15}
+                stroke="#eae3ef"
+              />
+              <text
+                x="33"
+                y={11 + i * 15}
+                textAnchor="end"
+                fill="#9c8ca7"
+                fontSize="8"
+              >
+                {(ceiling - i * tick).toLocaleString("th-TH")}
+              </text>
+            </g>
+          ))}
+          {week.map((d, i) => (
+            <g key={d.date}>
+              <title>
+                {d.date +
+                  " รายรับ " +
+                  money(d.income) +
+                  " รายจ่าย " +
+                  money(d.expense)}
+              </title>
+              <rect
+                x={43 + i * 40}
+                y={68 - (d.income / 100 / ceiling) * 60}
+                width="13"
+                height={(d.income / 100 / ceiling) * 60}
+                rx="2"
+                fill="#add9c4"
+              />
+              <rect
+                x={58 + i * 40}
+                y={68 - (d.expense / 100 / ceiling) * 60}
+                width="13"
+                height={(d.expense / 100 / ceiling) * 60}
+                rx="2"
+                fill="#efbed1"
+              />
+              <text
+                x={57 + i * 40}
+                y="83"
+                textAnchor="middle"
+                fill="#8d789b"
+                fontSize="8"
+              >
+                {d.label}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </button>
       <article className="compact-panel">
         <h3>✧ งบประมาณ</h3>
         {budgets.length ? (
@@ -61,7 +149,7 @@ export default function CompactHome({
               c = s.categories.find((c) => c.id === b.categoryId);
             return (
               <div className="compact-budget" key={b.id}>
-                <Pixel name={c?.icon} size={28} />
+                <Pixel name={categoryIcon(c)} size={28} />
                 <div>
                   <span>
                     {c?.name}{" "}
@@ -103,9 +191,6 @@ export default function CompactHome({
         ))}
         {!recent.length && <p className="muted">เริ่มบันทึกด้วยปุ่ม +</p>}
       </article>
-      <button className="text-button" onClick={() => detail("period")}>
-        สรุปรอบนี้ ›
-      </button>
     </section>
   );
 }
