@@ -1,11 +1,6 @@
 import DetailSheet from "./DetailSheet";
 import { type DetailKind } from "./details";
 import { usePageNavigation, isBackSwipe } from "./navigation";
-import QuickSettings, { readQuick } from "./QuickSettings";
-import MobileHome from "./MobileHome";
-import InteractionFeedback from "./InteractionFeedback";
-import CategoryPicker from "./CategoryPicker";
-import QuickMenu from "./QuickMenu";
 import {
   FantasySettings,
   FantasyRoom,
@@ -201,12 +196,6 @@ export default function App() {
   useEffect(() => {
     window.WitchyBack = () => {
       if (document.querySelector('[role="alertdialog"]')) return true;
-      if (
-        !document.dispatchEvent(
-          new Event("witchy-picker-back", { cancelable: true }),
-        )
-      )
-        return true;
       if (modal) {
         void askConfirm("ยกเลิกการแก้ไขและย้อนกลับ? ข้อมูลที่ยังไม่บันทึกจะไม่ถูกเก็บ").then(
           (ok) => ok && setModal(null),
@@ -485,8 +474,6 @@ export default function App() {
           window.WitchyBack?.();
       }}
       className="app-shell"
-      data-decoration={readQuick(s).theme}
-      data-page={page}
       data-theme={scene}
       data-palette={
         s.settings.find((x) => x.id === "appearance.palette")?.value ||
@@ -544,7 +531,7 @@ export default function App() {
           <div className="local-label">
             <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
           </div>
-          <small>Witchy Ledger · v0.6.1-test</small>
+          <small>Witchy Ledger · v0.6.2-local-test</small>
         </div>
       </aside>
       <div className="main-shell">
@@ -591,14 +578,6 @@ export default function App() {
             >
               ← ย้อนกลับ
             </button>
-          )}
-          {page === "dashboard" && (
-            <MobileHome
-              s={s}
-              period={p}
-              open={() => setPage("transactions")}
-              detail={setDetail}
-            />
           )}
           <div className="page-heading">
             <div>
@@ -1532,7 +1511,6 @@ export default function App() {
               </section>
             </div>
           )}
-          {page === "settings" && <QuickSettings s={s} act={act} />}
           {page === "settings" && (
             <section className="card settings-card">
               <FantasySettings s={s} />
@@ -1670,43 +1648,44 @@ export default function App() {
             ))}
         </select>
       </nav>
-      <InteractionFeedback muted={fantasy.muted} />
       {quickAdd && (
-        <QuickMenu
-          config={readQuick(s)}
-          categories={s.categories}
-          muted={fantasy.muted}
-          close={() => setQuickAdd(false)}
-          choose={(kind, id, amount) => {
-            setQuickAdd(false);
-            const category = s.categories.find(
-              (c) => c.id === id && !c.archived,
-            );
-            const account =
-              s.accounts.find((a) => a.active && a.id === "cash") ||
-              s.accounts.find((a) => a.active);
-            const t = {
-              ...emptyTx(),
-              kind,
-              categoryId: category?.id || "",
-              accountId: account?.id || "",
-              amount: (amount || 0) * 100,
-            };
-            menuSound("equip", fantasy.muted);
-            if (amount && category && account)
-              void act(
-                () =>
-                  saveTransaction({
-                    ...t,
-                    title: category.name,
-                    tags: "#" + category.name,
-                    time: new Date().toTimeString().slice(0, 5),
-                  }),
-                "บันทึก " + category.name + " " + amount + " บาทแล้ว",
-              );
-            else setModal({ type: "transaction", value: t });
-          }}
-        />
+        <div className="quick-add-scrim" onClick={() => setQuickAdd(false)}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="เลือกประเภทรายการ"
+            className="quick-add-options"
+          >
+            <button
+              className="quick-income"
+              onClick={() => {
+                setQuickAdd(false);
+                setModal({
+                  type: "transaction",
+                  value: { ...emptyTx(), kind: "income" },
+                });
+                menuSound("equip", fantasy.muted);
+              }}
+            >
+              <ArrowDownRight size={36} />
+              <b>รายรับ</b>
+            </button>
+            <button
+              className="quick-expense"
+              onClick={() => {
+                setQuickAdd(false);
+                setModal({
+                  type: "transaction",
+                  value: { ...emptyTx(), kind: "expense" },
+                });
+                menuSound("equip", fantasy.muted);
+              }}
+            >
+              <ArrowUpRight size={36} />
+              <b>รายจ่าย</b>
+            </button>
+          </section>
+        </div>
       )}
       {showProfile && (
         <Profile
@@ -1798,8 +1777,6 @@ function Editor({
   const [accountKind, setAccountKind] = useState(
     modal.type === "account" ? modal.value?.kind || "bank" : "bank",
   );
-  const categoryName =
-    s.categories.find((c) => c.id === (subCat || mainCat))?.name || "";
   const formId = "editor-form";
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -1838,14 +1815,6 @@ function Editor({
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (busy) return;
-    if (
-      modal.type === "transaction" &&
-      ["income", "expense"].includes(kind) &&
-      !mainCat
-    ) {
-      setWarning("กรุณาเลือกหมวดหลัก");
-      return;
-    }
     setBusy(true);
     const f = new FormData(e.currentTarget);
     const str = (k: string) => String(f.get(k) || "").trim();
@@ -1855,31 +1824,19 @@ function Editor({
           ...(tx || emptyTx()),
           kind: kind as Transaction["kind"],
           amount: satang(str("amount")),
-          title:
-            str("note").slice(0, 200) ||
-            tx?.title ||
-            categoryName ||
-            "รายการบัญชี",
+          title: str("title"),
           date: str("date"),
-          time: tx?.time || new Date().toTimeString().slice(0, 5),
+          time: str("time"),
           accountId: str("accountId"),
           toAccountId: kind === "transfer" ? str("toAccountId") : "",
           categoryId: ["income", "expense"].includes(kind)
             ? subCat || mainCat
             : "",
           note: str("note"),
-          tags: Array.from(
-            new Set(
-              [
-                ...(tx?.tags || "").split(" "),
-                categoryName ? "#" + categoryName : "",
-              ].filter(Boolean),
-            ),
-          ).join(" "),
+          tags: str("tags"),
           recurring: f.has("recurring"),
         };
         await saveTransaction(t);
-        menuSound("equip", readFantasy(s).muted);
       }
       if (modal.type === "account") {
         const a: Account = {
@@ -2073,10 +2030,10 @@ function Editor({
                   <span>฿</span>
                   <input
                     name="amount"
-                    inputMode={kind === "adjustment" ? "decimal" : "numeric"}
+                    inputMode="decimal"
                     required
-                    placeholder="0"
-                    defaultValue={tx?.amount ? String(tx.amount / 100) : ""}
+                    placeholder="0.00"
+                    defaultValue={tx ? (tx.amount / 100).toFixed(2) : ""}
                   />
                 </div>
               </label>
@@ -2087,30 +2044,16 @@ function Editor({
                   เครื่องหมายบวกคือเพิ่มหนี้
                 </p>
               )}
-              {kind === "expense" && categoryName && (
-                <div className="suggested-prices">
-                  ราคาแนะนำ{" "}
-                  {(categoryName.includes("กาแฟ")
-                    ? [20, 25, 30]
-                    : categoryName.includes("น้ำมัน")
-                      ? [120, 300, 500]
-                      : [40, 45, 50]
-                  ).map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={(e) => {
-                        const input = e.currentTarget.form?.elements.namedItem(
-                          "amount",
-                        ) as HTMLInputElement;
-                        if (input) input.value = String(n);
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <label>
+                ชื่อรายการ
+                <input
+                  name="title"
+                  required
+                  maxLength={200}
+                  placeholder="วันนี้ใช้จ่ายอะไรไปบ้าง?"
+                  defaultValue={tx?.title}
+                />
+              </label>
               <div className="form-grid">
                 <label>
                   วันที่
@@ -2121,58 +2064,72 @@ function Editor({
                     defaultValue={tx?.date || today()}
                   />
                 </label>
+                <label>
+                  เวลา (ไม่บังคับ)
+                  <input type="time" name="time" defaultValue={tx?.time} />
+                </label>
               </div>
               {["income", "expense"].includes(kind) && (
-                <CategoryPicker
-                  categories={s.categories}
-                  kind={kind}
-                  main={mainCat}
-                  sub={subCat}
-                  onChange={(m, c) => {
-                    setMainCat(m);
-                    setSubCat(c);
-                  }}
-                  onAdd={() => {
-                    const name = window.prompt("ชื่อหมวดใหม่");
-                    if (!name?.trim()) return;
-                    void act(async () => {
-                      const id = uid();
-                      await db.categories.add({
-                        id,
-                        name: name.trim(),
-                        parentId: mainCat,
-                        kind: kind as "income" | "expense",
-                        icon: "book",
-                        color: "#bba0d0",
-                        archived: false,
-                        order: s.categories.length,
-                      });
-                      if (mainCat) setSubCat(id);
-                      else setMainCat(id);
-                    }, "เพิ่มหมวดแล้ว");
-                  }}
-                />
+                <div className="form-grid">
+                  <label>
+                    หมวดหลัก
+                    <select
+                      required
+                      value={mainCat}
+                      onChange={(e) => {
+                        setMainCat(e.target.value);
+                        setSubCat("");
+                      }}
+                    >
+                      <option value="">เลือกหมวดหมู่</option>
+                      {s.categories
+                        .filter(
+                          (c) =>
+                            !c.parentId &&
+                            c.kind === kind &&
+                            (!c.archived || c.id === mainCat),
+                        )
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label>
+                    หมวดย่อย
+                    <select
+                      value={subCat}
+                      onChange={(e) => setSubCat(e.target.value)}
+                    >
+                      <option value="">ใช้หมวดหลัก</option>
+                      {s.categories
+                        .filter(
+                          (c) =>
+                            !!mainCat &&
+                            c.parentId === mainCat &&
+                            (!c.archived || c.id === subCat),
+                        )
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </div>
               )}
               <div className="form-grid">
-                <fieldset className="account-orbs">
-                  <legend>{kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}</legend>
-                  {accountOptions().map((o) => (
-                    <label key={o.key}>
-                      <input
-                        type="radio"
-                        required
-                        name="accountId"
-                        value={o.props.value}
-                        defaultChecked={
-                          o.props.value === (tx?.accountId || "bank")
-                        }
-                      />
-                      <span>
-                        {s.accounts.find((a) => a.id === o.props.value)?.name}
-                      </span>
-                    </label>
-                  ))}
-                </fieldset>
+                <label>
+                  {kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}
+                  <select
+                    name="accountId"
+                    required
+                    defaultValue={tx?.accountId || "bank"}
+                  >
+                    {accountOptions()}
+                  </select>
+                </label>
                 {kind === "transfer" && (
                   <label>
                     บัญชีปลายทาง
@@ -2199,6 +2156,14 @@ function Editor({
                   rows={2}
                   defaultValue={tx?.note}
                   placeholder="รายละเอียดเพิ่มเติม…"
+                />
+              </label>
+              <label>
+                แท็ก
+                <input
+                  name="tags"
+                  defaultValue={tx?.tags}
+                  placeholder="เช่น #วันทำงาน #จำเป็น"
                 />
               </label>
               <label className="check">

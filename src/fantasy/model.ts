@@ -42,16 +42,16 @@ export interface FantasyState {
   dialogueHistory: string[];
 }
 export const defaults: FantasyState = {
-  mode: true,
+  mode: false,
   character: "yui",
   hair: 0,
   hairColor: "#24202a",
   outfit: 0,
   hat: false,
   glasses: false,
-  accessory: "",
-  cape: false,
-  hand: "",
+  accessory: "ribbon",
+  cape: true,
+  hand: "book",
   furniture: ["bed", "clock", "cat"],
   favorites: [],
   hidden: false,

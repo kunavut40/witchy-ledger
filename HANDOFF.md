@@ -1,12 +1,10 @@
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
-## ล่าสุด: 0.6.1-test — รวมงานจากบ้านแล้ว
+## รุ่นล่าสุดที่ผู้ใช้สั่ง: 0.6.2-local-test — ซอร์สเครื่องนี้เท่านั้น
 
-อ่าน PROMPT-0.6.1.md และ RELEASE-0.6.1.md ก่อน สถานะด้านล่างเป็นประวัติ รวม origin/main f753ba3 (หน้าหลักมือถือ, วงเมนูด่วน, การตั้งค่าราคา, portrait) เข้ากับรายละเอียดการ์ดทั้ง4ใบ/สรุปรอบ/ย้อนกลับ และพัก wardrobe controls ที่ยังไม่เปลี่ยนภาพ ไม่ได้เขียนทับงานจากบ้าน
+อ่าน PROMPT-LOCAL-0.6.2.md และ RELEASE-LOCAL-0.6.2.md ก่อน ใช้ซอร์สเครื่องนี้ snapshot3fcacb6 ก่อนรวมGitHub ไม่ใช้treeของv0.6.1 ไม่ดึงหรือรวมงานGitHubเข้าบิลด์ใหม่ package app.witchyledger.offline versionCode8 signing keyเดิม คง4การ์ดรายละเอียด/สรุปรอบ/back/ผลตรวจwardrobeตามงานlocal
 
-APK ที่ส่งรอบนี้เป็น app.witchyledger.offline versionCode7 เซ็นด้วย witchy-test.jks เดิม ใช้อัปเดต Witchy Ledger เดิม ส่วน WitchyLedger-Preview.apk ในrepoยังเป็นไฟล์จากบ้าน0.6 package app.witchyledger.preview ใช้คนละฐานข้อมูลและอาจคนละsigning key อย่าอ้างว่า APK Offline ติดตั้งทับ Preview ได้ หากย้ายข้อมูลต้อง export/import JSON ผ่าน UI ห้ามถอนแอปเพื่อแก้ signature mismatch
-
-build-apk.ps1 รองรับ -Flavor Offline (ค่าเริ่มต้น) และ Preview พร้อมกำหนด -Jdk -BuildTools -AndroidJar -KeyStore -KeyAlias -Output โดยต้องใช้keyที่ตรงกับรุ่นที่จะอัปเดต ไม่มีprivate keyอยู่ในrepo
+ข้อมูลด้านล่างเป็นประวัติ ไม่ใช่ข้ออนุญาตให้ดึงGitHubกลับมาผสม การนำซอร์สใหม่ขึ้นGitHubทำหลังบิลด์เสร็จและต้องใช้treeเดียวกับที่ตรวจแล้ว รักษาประวัติเก่าได้ แต่ห้ามนำโค้ดจากสายงานGitHubมารวมโดยผู้ใช้ไม่ได้ขอ
 
 ## ล่าสุด: 0.6.0-test
 
