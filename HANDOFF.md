@@ -1,5 +1,13 @@
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
+## ล่าสุด: 0.6.1-test — รวมงานจากบ้านแล้ว
+
+อ่าน PROMPT-0.6.1.md และ RELEASE-0.6.1.md ก่อน สถานะด้านล่างเป็นประวัติ รวม origin/main f753ba3 (หน้าหลักมือถือ, วงเมนูด่วน, การตั้งค่าราคา, portrait) เข้ากับรายละเอียดการ์ดทั้ง4ใบ/สรุปรอบ/ย้อนกลับ และพัก wardrobe controls ที่ยังไม่เปลี่ยนภาพ ไม่ได้เขียนทับงานจากบ้าน
+
+APK ที่ส่งรอบนี้เป็น app.witchyledger.offline versionCode7 เซ็นด้วย witchy-test.jks เดิม ใช้อัปเดต Witchy Ledger เดิม ส่วน WitchyLedger-Preview.apk ในrepoยังเป็นไฟล์จากบ้าน0.6 package app.witchyledger.preview ใช้คนละฐานข้อมูลและอาจคนละsigning key อย่าอ้างว่า APK Offline ติดตั้งทับ Preview ได้ หากย้ายข้อมูลต้อง export/import JSON ผ่าน UI ห้ามถอนแอปเพื่อแก้ signature mismatch
+
+build-apk.ps1 รองรับ -Flavor Offline (ค่าเริ่มต้น) และ Preview พร้อมกำหนด -Jdk -BuildTools -AndroidJar -KeyStore -KeyAlias -Output โดยต้องใช้keyที่ตรงกับรุ่นที่จะอัปเดต ไม่มีprivate keyอยู่ในrepo
+
 ## ล่าสุด: 0.6.0-test
 
 ดู PROMPT-0.6.md และ RELEASE-0.6.md เพิ่ม Dashboardรายละเอียดทั้ง4การ์ด สรุปปุ่มรอบนี้ และ backhistory/gesture ตรวจพบ wardrobeเปลี่ยนภาพไม่ได้จึงปิดcontrolsที่ไม่ทำงานอย่างโปร่งใส ไม่ใช่แก้การแต่งตัวครบ Tests33กรณีผ่าน สูตรบัญชี/schema/rankเดิมไม่เปลี่ยน APK versionCode6 key/appIDเดิม ยังไม่มีการตรวจติดตั้งS25จริง

@@ -3,3 +3,4 @@ dist/
 *.tsbuildinfo
 *.jks
 *.apk
+*.apk.idsig

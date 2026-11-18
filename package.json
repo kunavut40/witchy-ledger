@@ -1,7 +1,7 @@
 {
   "name": "witchy-ledger",
   "private": true,
-  "version": "0.6.0-test",
+  "version": "0.6.1-test",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --configLoader runner",
