@@ -181,6 +181,11 @@ export function FantasyRoom({
             </select>
           </label>
         </div>
+        <p className="info-note wardrobe-audit">
+          ตอนนี้เปลี่ยนตัวละคร สีตา และฉากได้ ส่วนชุด ผม หมวก แว่น กิ๊บ ผ้าคลุม
+          และของถือมือกำลังเตรียมภาพเพิ่มเติม จึงยังเลือกไม่ได้ ค่าที่เคยเลือกไว้ยังเก็บอยู่
+          ของแต่งห้องปรับได้เฉพาะชิ้นที่เลือกเพิ่ม ส่วนเฟอร์นิเจอร์ที่อยู่ในภาพฉากยังคงเดิม
+        </p>
         <div className="wardrobe-tabs">
           {[
             ["outfit", "ชุด"],
@@ -204,7 +209,7 @@ export function FantasyRoom({
         {tab === "outfit" && (
           <div className="wardrobe-grid">
             {outfits.map((name, i) => {
-              const locked = level < outfitLevel(i);
+              const locked = true;
               return (
                 <button
                   disabled={locked}
@@ -217,10 +222,10 @@ export function FantasyRoom({
                   <b>{name}</b>
                   <small>
                     {locked
-                      ? "🔒 LV. " + outfitLevel(i)
+                      ? "รอภาพแยกชั้น · LV. " + outfitLevel(i)
                       : a.outfit === i
-                        ? "สวมใส่อยู่"
-                        : "สวมชุดนี้"}
+                        ? "ภาพชุดยังไม่พร้อม"
+                        : "ภาพชุดยังไม่พร้อม"}
                   </small>
                 </button>
               );
@@ -233,6 +238,7 @@ export function FantasyRoom({
               สีผม{" "}
               <input
                 type="color"
+                disabled
                 value={a.hairColor}
                 onChange={(e) => save({ hairColor: e.target.value })}
               />
@@ -241,13 +247,15 @@ export function FantasyRoom({
               {hairstyles.map((name, i) => (
                 <button
                   key={i}
-                  disabled={i > 4 && level < 3}
+                  disabled={true}
                   className={a.hair === i ? "selected" : ""}
                   onClick={() => save({ hair: i })}
                 >
                   <Companion appearance={{ ...a, hair: i }} size={65} />
                   <b>{name}</b>
-                  <small>{i > 4 && level < 3 ? "🔒 LV. 3" : "เลือกทรงผม"}</small>
+                  <small>
+                    {i > 4 && level < 3 ? "🔒 LV. 3" : "รอภาพแยกชั้น"}
+                  </small>
                 </button>
               ))}
             </div>
@@ -258,6 +266,7 @@ export function FantasyRoom({
             <label className="check">
               <input
                 type="checkbox"
+                disabled
                 checked={a.hat}
                 onChange={(e) => save({ hat: e.target.checked })}
               />{" "}
@@ -266,6 +275,7 @@ export function FantasyRoom({
             <label className="check">
               <input
                 type="checkbox"
+                disabled
                 checked={a.glasses}
                 onChange={(e) => save({ glasses: e.target.checked })}
               />{" "}
@@ -274,6 +284,7 @@ export function FantasyRoom({
             <label className="check">
               <input
                 type="checkbox"
+                disabled
                 checked={a.cape}
                 onChange={(e) => save({ cape: e.target.checked })}
               />{" "}
@@ -282,6 +293,7 @@ export function FantasyRoom({
             <label>
               กิ๊บ
               <select
+                disabled
                 value={a.accessory}
                 onChange={(e) => save({ accessory: e.target.value })}
               >
@@ -292,6 +304,7 @@ export function FantasyRoom({
             <label>
               ของถือมือ
               <select
+                disabled
                 value={a.hand}
                 onChange={(e) => save({ hand: e.target.value })}
               >
@@ -337,7 +350,7 @@ export function FantasyRoom({
           <>
             <button
               className="soft-button"
-              disabled={a.favorites.length >= 12}
+              disabled={true}
               onClick={() =>
                 save({
                   favorites: [
@@ -360,7 +373,12 @@ export function FantasyRoom({
               + บันทึกชุดปัจจุบัน
             </button>
             {a.favorites.map((f, i) => (
-              <button className="soft-button" key={i} onClick={() => save(f)}>
+              <button
+                className="soft-button"
+                disabled
+                key={i}
+                onClick={() => save(f)}
+              >
                 {f.name}
               </button>
             ))}
@@ -369,6 +387,7 @@ export function FantasyRoom({
         <div className="card-footer">
           <button
             className="soft-button"
+            disabled
             onClick={() => {
               const unlocked = outfits
                 .map((_, i) => i)

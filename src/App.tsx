@@ -1,3 +1,6 @@
+import DetailSheet from "./DetailSheet";
+import { type DetailKind } from "./details";
+import { usePageNavigation, isBackSwipe } from "./navigation";
 import {
   FantasySettings,
   FantasyRoom,
@@ -10,7 +13,7 @@ import { progression } from "./progression";
 import Profile, { Character, getProfile } from "./Profile";
 import Debts from "./Debts";
 import Confirm, { askConfirm } from "./Confirm";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   LayoutDashboard,
@@ -153,8 +156,12 @@ function download(content: string, name: string, type = "application/json") {
 export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [quickAdd, setQuickAdd] = useState(false);
-  const [page, setPage] = useState("dashboard"),
-    [periodId, setPeriodId] = useState(""),
+  const [page, setPage, goPageBack] = usePageNavigation("dashboard");
+  const [detail, setDetail] = useState<DetailKind | null>(null);
+  const swipeStart = useRef<{ x: number; y: number; time: number } | null>(
+    null,
+  );
+  const [periodId, setPeriodId] = useState(""),
     [modal, setModal] = useState<Modal>(null),
     [notice, setNotice] = useState(""),
     [error, setError] = useState(""),
@@ -186,6 +193,42 @@ export default function App() {
       removeEventListener("offline", on);
     };
   }, []);
+  useEffect(() => {
+    window.WitchyBack = () => {
+      if (document.querySelector('[role="alertdialog"]')) return true;
+      if (modal) {
+        void askConfirm("ยกเลิกการแก้ไขและย้อนกลับ? ข้อมูลที่ยังไม่บันทึกจะไม่ถูกเก็บ").then(
+          (ok) => ok && setModal(null),
+        );
+        return true;
+      }
+      if (showProfile) {
+        setShowProfile(false);
+        return true;
+      }
+      if (quickAdd) {
+        setQuickAdd(false);
+        return true;
+      }
+      if (detail) {
+        document.dispatchEvent(new Event("witchy-detail-back"));
+        return true;
+      }
+      const overlayBack = new Event("witchy-overlay-back", {
+        cancelable: true,
+      });
+      if (!document.dispatchEvent(overlayBack)) return true;
+      return goPageBack();
+    };
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") window.WitchyBack?.();
+    };
+    addEventListener("keydown", key);
+    return () => {
+      delete window.WitchyBack;
+      removeEventListener("keydown", key);
+    };
+  }, [page, modal, showProfile, quickAdd, detail]);
   const liveState = useLiveQuery(() => readState(), [], undefined);
   useEffect(() => {
     if (notice) {
@@ -413,6 +456,23 @@ export default function App() {
   }
   return (
     <div
+      onPointerDown={(e) => {
+        if ((e.target as HTMLElement).closest("input,textarea,select,button,a"))
+          return;
+        swipeStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+      }}
+      onPointerCancel={() => {
+        swipeStart.current = null;
+      }}
+      onPointerUp={(e) => {
+        const start = swipeStart.current;
+        swipeStart.current = null;
+        if (
+          start &&
+          isBackSwipe(start, { x: e.clientX, y: e.clientY, time: Date.now() })
+        )
+          window.WitchyBack?.();
+      }}
       className="app-shell"
       data-theme={scene}
       data-palette={
@@ -471,7 +531,7 @@ export default function App() {
           <div className="local-label">
             <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
           </div>
-          <small>Witchy Ledger · v0.5.0-test</small>
+          <small>Witchy Ledger · v0.6.0-test</small>
         </div>
       </aside>
       <div className="main-shell">
@@ -511,6 +571,14 @@ export default function App() {
           </div>
         </header>
         <main className="content">
+          {page !== "dashboard" && (
+            <button
+              className="text-button page-back"
+              onClick={() => window.WitchyBack?.()}
+            >
+              ← ย้อนกลับ
+            </button>
+          )}
           <div className="page-heading">
             <div>
               <span className="eyebrow">A LITTLE MAGIC, EVERY DAY</span>
@@ -601,7 +669,19 @@ export default function App() {
                 </div>
               </section>
               <div className="stats-grid">
-                <article className="stat-card balance-card">
+                <article
+                  className="stat-card balance-card detail-trigger"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="ดูรายละเอียดเงินคงเหลือ"
+                  onClick={() => setDetail("actual")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setDetail("actual");
+                    }
+                  }}
+                >
                   <div className="spread">
                     <span>เงินคงเหลือจริงสะสม</span>
                     <Wallet size={19} />
@@ -610,7 +690,19 @@ export default function App() {
                   <small>ยอดทุกบัญชีเงิน ณ วันสิ้นสุดรอบ</small>
                   <span className="stat-decoration">✧</span>
                 </article>
-                <article className="stat-card">
+                <article
+                  className="stat-card detail-trigger"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="ดูรายละเอียดรายรับ"
+                  onClick={() => setDetail("income")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setDetail("income");
+                    }
+                  }}
+                >
                   <div className="spread">
                     <span>รายรับรอบนี้</span>
                     <span className="stat-icon green">
@@ -620,7 +712,19 @@ export default function App() {
                   <h2 className="income">฿{money(sum.income)}</h2>
                   <small>เฉพาะวันที่ในรอบบัญชี</small>
                 </article>
-                <article className="stat-card">
+                <article
+                  className="stat-card detail-trigger"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="ดูรายละเอียดรายจ่าย"
+                  onClick={() => setDetail("expense")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setDetail("expense");
+                    }
+                  }}
+                >
                   <div className="spread">
                     <span>รายจ่ายรอบนี้</span>
                     <span className="stat-icon pink">
@@ -630,7 +734,19 @@ export default function App() {
                   <h2 className="expense">฿{money(sum.expense)}</h2>
                   <small>รวมยอดซื้อผ่านบัตรเครดิต</small>
                 </article>
-                <article className="stat-card">
+                <article
+                  className="stat-card detail-trigger"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="ดูรายละเอียดยอดสุทธิ"
+                  onClick={() => setDetail("flow")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setDetail("flow");
+                    }
+                  }}
+                >
                   <div className="spread">
                     <span>ยอดสุทธิของรอบ</span>
                     <span className="stat-icon purple">
@@ -649,7 +765,13 @@ export default function App() {
                 <section className="card">
                   <div className="card-heading">
                     <h3>รายจ่ายแยกตามหมวดหมู่</h3>
-                    <span className="tag">รอบนี้</span>
+                    <button
+                      className="tag"
+                      onClick={() => setDetail("period")}
+                      aria-label="ดูสรุปรายจ่ายรอบนี้"
+                    >
+                      รอบนี้ <ChevronRight size={12} />
+                    </button>
                   </div>
                   {chartCats.length ? (
                     <div className="donut-layout">
@@ -1574,6 +1696,15 @@ export default function App() {
         />
       )}
       {page === "dashboard" && <CompanionWidget s={s} />}
+      {detail && (
+        <DetailSheet
+          key={detail}
+          kind={detail}
+          s={s}
+          period={p}
+          close={() => setDetail(null)}
+        />
+      )}
       <Confirm />
       {notice && (
         <div className="toast" role="status">
@@ -1652,7 +1783,6 @@ function Editor({
     const old = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const on = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
       if (e.key === "Tab") {
         const elements = Array.from(
           document.querySelectorAll<HTMLElement>(

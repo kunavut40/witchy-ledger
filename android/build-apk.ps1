@@ -5,7 +5,7 @@ $buildTools=Join-Path $Tools 'buildtools\android-15'
 $androidJar=Join-Path $Tools 'platform\android-35\android.jar'
 $androidClasses=Join-Path $Tools 'android-classpath'
 if(!(Test-Path -LiteralPath $androidClasses)){Add-Type -AssemblyName System.IO.Compression.FileSystem;[IO.Compression.ZipFile]::ExtractToDirectory($androidJar,$androidClasses)}
-$stage=Join-Path $Tools 'apk-build'
+$stage=Join-Path $Tools ('apk-build-'+[guid]::NewGuid().ToString('N'))
 $assets=Join-Path $stage 'assets\www'
 $classes=Join-Path $stage 'classes'
 $dex=Join-Path $stage 'dex'

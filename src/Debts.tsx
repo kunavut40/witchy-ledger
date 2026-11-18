@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { askConfirm } from "./Confirm";
 import { Plus, Pencil, X, Check, History, ArrowDownLeft } from "lucide-react";
 import {
   type State,
@@ -243,6 +244,17 @@ function DebtEditor({
       : (current / 100).toFixed(2),
   );
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const back = (event: Event) => {
+      event.preventDefault();
+      if (busy) return;
+      void askConfirm("ยกเลิกการแก้ไขและย้อนกลับ? ข้อมูลที่ยังไม่บันทึกจะไม่ถูกเก็บ").then(
+        (ok) => ok && close(),
+      );
+    };
+    document.addEventListener("witchy-overlay-back", back);
+    return () => document.removeEventListener("witchy-overlay-back", back);
+  }, [busy, close]);
   const [date, setDate] = useState(today());
   const asOf = a ? balance(a, s.transactions, date) : 0;
   let entered = 0;
