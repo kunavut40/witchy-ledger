@@ -1,3 +1,4 @@
+import { companionPerformance } from "./performance";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { State } from "../domain";
 import Companion from "./Companion";
@@ -21,6 +22,12 @@ export default function CompanionWidget({
       [s, a],
     );
   const line = runtime.queue.find((x) => x.character === a.character);
+  const expressionEmotion =
+    line?.emotion || (a.character === "yui" ? "proud" : "happy");
+  const idleText =
+    a.character === "yui"
+      ? "ไม่ได้รออยู่หรอกนะ… มีรายการให้ฉันจดหรือเปล่า?"
+      : "พร้อมจดแล้ว! วันนี้มีเรื่องอะไรมาเล่าให้ฟังบ้าง?";
   const [count, setCount] = useState(0),
     [problem, setProblem] = useState(false),
     [reduced, setReduced] = useState(
@@ -102,6 +109,10 @@ export default function CompanionWidget({
       className="companion-widget"
       aria-label="ผู้ช่วยส่วนตัว"
       data-event={line?.event || "idle"}
+      data-expression={
+        companionPerformance(expressionEmotion, a.character).expression
+      }
+      data-pose={companionPerformance(expressionEmotion, a.character).pose}
       data-motion={motion ? "on" : "off"}
     >
       <button
@@ -113,7 +124,7 @@ export default function CompanionWidget({
       </button>
       <Companion
         appearance={a}
-        emotion={line?.emotion || "idle"}
+        emotion={expressionEmotion}
         talking={motion && count < letters.length}
         mouthFrame={count % 3}
         size={110}
@@ -133,11 +144,11 @@ export default function CompanionWidget({
             ? "บทพูดยังไม่พร้อม แตะเพื่อลองใหม่"
             : line
               ? letters.slice(0, count).join("")
-              : "✦"}
+              : idleText}
           <i>▾</i>
         </span>
         <span className="sr-only" aria-live="polite">
-          {line?.text || "แตะเพื่อคุยกับผู้ช่วย"}
+          {line?.text || idleText}
         </span>
       </button>
     </aside>

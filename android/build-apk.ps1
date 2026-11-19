@@ -6,7 +6,7 @@ param(
  [string]$KeyStore=(Join-Path $env:USERPROFILE '.android/debug.keystore'),
  [string]$KeyAlias='androiddebugkey',
  [string]$ApplicationId='app.witchyledger.preview',
- [string]$Output=(Join-Path $PSScriptRoot '../WitchyLedger-0.6.10.apk')
+ [string]$Output=(Join-Path $PSScriptRoot '../WitchyLedger-0.6.11.apk')
 )
 $ErrorActionPreference='Stop'
 if(!$Jdk -and $Tools){$Jdk=(Get-ChildItem -LiteralPath (Join-Path $Tools 'jdk') -Directory | Select-Object -First 1).FullName}
@@ -16,8 +16,8 @@ if(!$Jdk -or !$BuildTools -or !$AndroidJar){throw 'Specify Jdk, BuildTools and A
 if(!(Test-Path -LiteralPath $KeyStore)){throw 'Signing key not found; supply KeyStore and KeyAlias'}
 $stage=Join-Path $env:TEMP ('witchy-apk-'+[guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $stage | Out-Null
-$manifest=(Get-Content -Raw (Join-Path $PSScriptRoot 'AndroidManifest.xml')).Replace('package="app.witchyledger.offline"','package="'+$ApplicationId+'"').Replace('android:name=".MainActivity"','android:name="app.witchyledger.offline.MainActivity"').Replace('android:versionCode="9"','android:versionCode="16"').Replace('android:versionName="0.6.3-local-test"','android:versionName="0.6.10-local-test"')
-$manifest=$manifest.Replace('android:label="Witchy Ledger"','android:label="Witchy Ledger 0.6.10"')
+$manifest=(Get-Content -Raw (Join-Path $PSScriptRoot 'AndroidManifest.xml')).Replace('package="app.witchyledger.offline"','package="'+$ApplicationId+'"').Replace('android:name=".MainActivity"','android:name="app.witchyledger.offline.MainActivity"').Replace('android:versionCode="9"','android:versionCode="17"').Replace('android:versionName="0.6.3-local-test"','android:versionName="0.6.11-local-test"')
+$manifest=$manifest.Replace('android:label="Witchy Ledger"','android:label="Witchy Ledger 0.6.11"')
 $manifest | Set-Content (Join-Path $stage 'AndroidManifest.xml') -Encoding utf8
 $assets=Join-Path $stage 'assets\www'
 $classes=Join-Path $stage 'classes'

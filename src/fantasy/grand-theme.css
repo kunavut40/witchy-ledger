@@ -1,0 +1,349 @@
+/* Palace artwork and decorative surfaces exist only in Fantasy mode. */
+.app-shell {
+  --grand-hue: 0deg;
+  --grand-gold: #aa7839;
+  --grand-ink: color-mix(in srgb, var(--accent, #ac91cd) 45%, #291a38);
+}
+.app-shell[data-palette="peach"] {
+  --grand-hue: 70deg;
+}
+.app-shell[data-palette="mint"] {
+  --grand-hue: 225deg;
+}
+.app-shell[data-palette="rose"] {
+  --grand-hue: 35deg;
+}
+.app-shell[data-palette="sky"] {
+  --grand-hue: -45deg;
+}
+.app-shell[data-palette="gold"] {
+  --grand-hue: 115deg;
+}
+.app-shell[data-fantasy="on"] {
+  isolation: isolate;
+  background: transparent !important;
+  color: var(--grand-ink);
+}
+.grand-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: #ece3f7;
+}
+.grand-scene > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: hue-rotate(var(--grand-hue)) saturate(0.8);
+  opacity: 0.92;
+}
+.grand-scene-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #fff6,
+    transparent 25%,
+    #fff3 65%,
+    var(--wash, #f1e9fc)
+  );
+}
+.grand-arch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.78;
+  filter: drop-shadow(0 0 4px #ffe6a3);
+}
+.grand-spark {
+  position: absolute;
+  color: #fff1b6;
+  text-shadow:
+    0 0 8px #dcad5a,
+    0 0 14px var(--accent);
+  font-style: normal;
+  font-size: 19px;
+  animation: grand-glimmer 4s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+.app-shell[data-fantasy="on"] .main-shell,
+.app-shell[data-fantasy="on"] .content {
+  background: transparent !important;
+}
+.app-shell[data-fantasy="on"]
+  :is(.card, .compact-card, .compact-panel, .period-bar, .detail-total) {
+  background: linear-gradient(
+    135deg,
+    #fffdf5f5,
+    color-mix(in srgb, var(--wash, #efe5fa) 89%, transparent)
+  ) !important;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 60%, #a88147) !important;
+  box-shadow:
+    0 3px 16px #37213d20,
+    inset 0 0 0 3px #fff8,
+    inset 0 0 0 4px #c3a77355;
+  color: var(--grand-ink);
+  position: relative;
+}
+.app-shell[data-fantasy="on"] :is(.card, .compact-card, .compact-panel):before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--grand-gold), var(--grand-gold)) top left/13px 1px
+      no-repeat,
+    linear-gradient(var(--grand-gold), var(--grand-gold)) top left/1px 13px
+      no-repeat,
+    linear-gradient(var(--grand-gold), var(--grand-gold)) bottom right/13px 1px
+      no-repeat,
+    linear-gradient(var(--grand-gold), var(--grand-gold)) bottom right/1px 13px
+      no-repeat;
+  opacity: 0.7;
+}
+.app-shell[data-fantasy="on"] :is(.topbar, .refreshed-nav) {
+  background: linear-gradient(
+    120deg,
+    #fffdf4f2,
+    color-mix(in srgb, var(--wash) 94%, transparent)
+  ) !important;
+  border-color: #b89255 !important;
+  box-shadow:
+    0 2px 14px #62446322,
+    inset 0 0 0 1px #fff9;
+}
+.app-shell[data-fantasy="on"] .topbar {
+  border-bottom-width: 2px;
+  border-bottom-style: double;
+}
+.app-shell[data-fantasy="on"] .mobile-brand {
+  color: var(--grand-ink);
+  font-weight: 700;
+  text-shadow: 0 1px #fff;
+}
+.app-shell[data-fantasy="on"] :is(.primary, .central-add) {
+  background: linear-gradient(
+    140deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 76%, #4a285d)
+  ) !important;
+  box-shadow:
+    0 3px 15px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 0 0 2px #ffe6ae70 !important;
+  border: 1px solid #ac8246;
+}
+.app-shell[data-fantasy="on"] .detail-sheet {
+  background:
+    linear-gradient(#fff8, #fff9),
+    url("/fantasy-palace-v1.png") center/cover !important;
+}
+.app-shell[data-fantasy="on"] .detail-sheet > header {
+  background: color-mix(in srgb, var(--wash) 90%, #fff) !important;
+  color: var(--grand-ink);
+}
+.app-shell[data-fantasy="on"] .modal {
+  border: 1.5px solid #b58a4b;
+  background: linear-gradient(145deg, #fffef9, var(--wash));
+  box-shadow:
+    0 8px 45px #3b234b40,
+    inset 0 0 0 4px #fff7;
+}
+.app-shell
+  :is(
+    .compact-card > span,
+    .compact-panel h3,
+    .entry-categories > label,
+    .entry-accounts legend
+  ) {
+  font-size: 14px;
+  font-weight: 600;
+  color: #563d68;
+}
+.app-shell
+  :is(.compact-card small, .compact-panel p, .muted, .compact-budget small) {
+  color: #6c5879;
+}
+.app-shell .compact-card strong {
+  font-size: clamp(22px, 6.3vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.9px;
+}
+.app-shell .compact-home h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #563769;
+}
+.app-shell
+  :is(
+    .entry-parent,
+    .entry-orbits button,
+    .category-orbit-choice,
+    .entry-accounts label > span
+  ) {
+  border-width: 1.5px;
+  border-color: #b89bc9;
+  color: #50345f;
+}
+.app-shell :is(input, select, textarea) {
+  color: #493154;
+  border-color: #bea4cb;
+}
+.app-shell .dialogue-bubble {
+  color: #4c315c;
+  border: 1.5px solid #ad86c2;
+  background: linear-gradient(130deg, #fffefb, var(--wash));
+  font-size: 15px !important;
+  line-height: 1.65;
+}
+.app-shell .dialogue-bubble > b {
+  color: #623b78;
+  font-size: 17px;
+}
+.app-shell .companion-hide {
+  width: 29px !important;
+  height: 29px !important;
+  font-size: 24px !important;
+  right: 0 !important;
+  top: 0 !important;
+}
+/* A square inner rig is cropped at the waist, retaining the visible body layer. */
+.companion-widget > span {
+  flex: 0 0 136px !important;
+  width: 136px !important;
+  height: 182px !important;
+  align-self: flex-end;
+}
+.companion-widget .character-art.modular-character {
+  width: 136px !important;
+  height: 182px !important;
+  overflow: hidden !important;
+  animation: none;
+}
+.companion-widget .rig-stage {
+  width: 205% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+  left: -52.5% !important;
+  top: -14% !important;
+  right: auto;
+  bottom: auto;
+}
+.companion-widget .rig-body {
+  display: block !important;
+}
+.companion-widget[data-pose="crossed"] .rig-body {
+  background-image: url("/wardrobe/poses-crossed-v2.png");
+  background-size: 800% 300%;
+  background-position: var(--pose-x) 0%;
+}
+.rig-wink {
+  opacity: 0;
+}
+.companion-widget[data-expression="closed"] .rig-blink {
+  opacity: 1 !important;
+  animation: none !important;
+}
+.companion-widget[data-expression="wink"] .rig-wink {
+  opacity: 1;
+}
+.companion-widget[data-expression="wink"] .rig-blink {
+  opacity: 0 !important;
+  animation: none !important;
+}
+.companion-widget[data-pose="crossed"][data-motion="on"] .rig-body {
+  animation: grand-folded-breathe 3.8s ease-in-out infinite;
+  transform-origin: 50% 48%;
+}
+.companion-widget[data-expression="closed"][data-motion="on"] .rig-head-group {
+  animation: grand-tsundere-nod 3.8s ease-in-out infinite;
+}
+@keyframes grand-glimmer {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translateY(3px) scale(0.65);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-5px) scale(1.15);
+  }
+}
+@keyframes grand-folded-breathe {
+  50% {
+    transform: translateY(-1.5px) rotate(-0.6deg);
+  }
+}
+@keyframes grand-tsundere-nod {
+  50% {
+    transform: rotate(-2deg) translateY(1px);
+  }
+}
+@media (max-width: 700px) {
+  .app-shell:has(.companion-widget) .main-shell {
+    padding-bottom: calc(264px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .companion-widget {
+    height: 184px !important;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 0 !important;
+    align-items: flex-end !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .companion-widget .dialogue-bubble {
+    max-height: 164px;
+    overflow-y: auto;
+    margin-bottom: 6px !important;
+    min-height: 100px !important;
+    padding: 15px 10px !important;
+  }
+  .grand-arch {
+    opacity: 0.62;
+  }
+  .app-shell .compact-card > span {
+    font-size: 13px;
+  }
+  .app-shell .compact-card small {
+    font-size: 11px;
+  }
+  .app-shell .profile-nickname {
+    font-size: 12px;
+  }
+  .app-shell .profile-nickname small {
+    font-size: 10px;
+  }
+}
+@media (max-width: 360px) {
+  .companion-widget > span,
+  .companion-widget .character-art.modular-character {
+    width: 114px !important;
+  }
+  .companion-widget > span {
+    flex-basis: 114px !important;
+  }
+  .app-shell .compact-card strong {
+    font-size: 23px;
+  }
+  .app-shell .compact-card > span {
+    font-size: 12px;
+  }
+  .app-shell .compact-home h1 {
+    font-size: 22px;
+  }
+}
+.grand-scene[data-motion="off"] *,
+.companion-widget[data-motion="off"] * {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .grand-spark,
+  .companion-widget[data-pose="crossed"] .rig-body,
+  .companion-widget[data-expression="closed"] .rig-head-group {
+    animation: none !important;
+  }
+}

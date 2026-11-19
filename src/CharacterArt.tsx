@@ -111,6 +111,22 @@ export default function CharacterArt({
                 }
               />
             </g>
+            <g className="rig-wink">
+              <path
+                className="eyelid-skin"
+                d={
+                  character === "momo"
+                    ? "M259 150L292 149L292 173L259 173Z"
+                    : "M267 145L297 140L299 165L268 170Z"
+                }
+              />
+              <path
+                className="eyelid-line"
+                d={
+                  character === "momo" ? "M263 165L288 163" : "M271 161L294 157"
+                }
+              />
+            </g>
             <g
               className="rig-mouth"
               transform={

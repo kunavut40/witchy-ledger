@@ -1,5 +1,9 @@
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
+## ล่าสุด 0.6.11-local-test — Grand Fantasy & half-body companion
+
+อ่าน RELEASE-0.6.11.md และ docs/ART-0.6.11.md ก่อน เพิ่มGrandFantasyScene+grand-theme.css (importหลังstyle.css), assets fantasy-palace-v1.png/poses-crossed-v2.png จากbuilt-in imagegen, ตัวละครpopupครึ่งตัวและperformance.ts mapping emotionจากdialogueจริง เพิ่มwinklayerในCharacterArt ไม่แก้schema/ยอดบัญชี Tests72ผ่าน CUAตรวจ393×852 และClassic/Fantasy/สีมิ้นต์/กอดอกขยิบตาแล้ว Offline versionCode17/keyเดิมอัปเดต0.6.10ได้ ยังไม่มีS25ต่อจริง
+
 ## ล่าสุด 0.6.10-local-test — แก้motionช้าและปุ่มXซ้ำ
 
 อ่าน RELEASE-0.6.10.md ก่อน ยกเลิกglobal washในSceneTransition ใช้surface.animate240msตรงส่วนที่เลือก; STEP_MS=OPEN_MS=240; ลบradial-closeให้ใช้central-add+/Xเพียงปุ่มเดียว เพิ่มsound peak gain0.075 เทียบเดิม0.035 Tests70ผ่านและCUAตรวจ393×852แล้ว app.witchyledger.offline versionCode16/keyเดิม อัปเดตOffline0.6.9ได้ Preview0.6.8เป็นคนละpackage/key ยังไม่มีS25ให้ทดสอบเสียงจริง
