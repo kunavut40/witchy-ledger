@@ -49,8 +49,12 @@ CHARACTER_BIBLE.md, DIALOGUE_EVENT_SPEC.md, ANIMATION_SPEC.md and CHARACTER_INTE
 - 68 automated tests passed, including existing financial/rank tests and new event/IndexedDB persistence tests.
 - TypeScript and production build checked.
 - Isolated browser: explicit second-cup manual entry, three talking frames, notice expiry/position, history after refresh, wardrobe switching, animation toggle, reduced motion, offline interactions, mobile widths 320/393/412.
-- Physical-phone testing remains. The prior APK 0.6.7 is unchanged; this task's current output is source and web build, not a newly packaged APK.
+- Physical-phone testing remains. APK 0.6.8 was subsequently built and verified; see the packaging follow-up below.
 
 ## Follow-up — minimal wind transition and short neck
 
-Added four theme-colored leaves and three thin wind streaks, retained preset/manual save rules, removed animated blur, and briefly paused background decoration. Verified all six palettes, reverse save direction, timer cleanup/retriggering and reduced motion. Shortened neck exposure using the shared head/accessory anchor; inspected ten hairstyle/hat combinations. See RELEASE-0.6.8.md for measured browser performance and its phone-testing limits. Source and future APK build metadata now identify 0.6.8 (14); no new APK is included in this source update.
+Added four theme-colored leaves and three thin wind streaks, retained preset/manual save rules, removed animated blur, and briefly paused background decoration. Verified all six palettes, reverse save direction, timer cleanup/retriggering and reduced motion. Shortened neck exposure using the shared head/accessory anchor; inspected ten hairstyle/hat combinations. See RELEASE-0.6.8.md for measured browser performance and its phone-testing limits. Source and APK metadata identify 0.6.8 (14).
+
+## Follow-up — APK packaged for phone testing
+
+Built `WitchyLedger-0.6.8.apk` from the current production web build. Verified APK signature, application ID/version, matching certificate with 0.6.7, and byte-matching packaged web/character assets. Uses the existing local signing key; no key or build tools are published. APK and SHA-256 checksum are included for GitHub download. Physical-phone testing remains for the user.
