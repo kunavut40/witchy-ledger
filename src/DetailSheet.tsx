@@ -1,3 +1,5 @@
+import { useExitMotion } from "./motion";
+import { readFantasy } from "./fantasy/Fantasy";
 import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, ChevronRight, X } from "lucide-react";
 import { detailData, detailTitles, type DetailKind } from "./details";
@@ -7,7 +9,7 @@ export default function DetailSheet({
   s,
   period: p,
   kind,
-  close,
+  close: closeImmediately,
 }: {
   s: State;
   period: Period;
@@ -15,6 +17,10 @@ export default function DetailSheet({
   close: () => void;
 }) {
   const [category, setCategory] = useState("");
+  const closeMotion = useExitMotion(closeImmediately, readFantasy(s).muted);
+  const backMotion = useExitMotion(() => setCategory(""), readFantasy(s).muted);
+  const close = closeMotion.dismiss;
+  const back = () => (category ? backMotion.dismiss() : close());
   const sheet = useRef<HTMLElement>(null);
   const d = detailData(s, p, kind, category);
   useEffect(() => {
@@ -33,14 +39,16 @@ export default function DetailSheet({
     };
   }, []);
   useEffect(() => {
-    const back = () => (category ? setCategory("") : close());
     document.addEventListener("witchy-detail-back", back);
     return () => document.removeEventListener("witchy-detail-back", back);
   }, [category, close]);
   return (
     <section
       ref={sheet}
-      className="detail-sheet"
+      className={
+        "detail-sheet motion-surface " +
+        (closeMotion.leaving || backMotion.leaving ? "motion-leaving" : "")
+      }
       onKeyDown={(event) => {
         if (event.key !== "Tab") return;
         const buttons = Array.from(
@@ -66,7 +74,7 @@ export default function DetailSheet({
         <button
           className="icon-button"
           aria-label="ย้อนกลับจากรายละเอียด"
-          onClick={() => (category ? setCategory("") : close())}
+          onClick={back}
         >
           <ArrowLeft />
         </button>

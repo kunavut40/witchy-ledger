@@ -6,11 +6,13 @@ export function menuSound(kind = "select", muted = false) {
     void context.resume();
     const t = context.currentTime;
     const notes =
-      kind === "equip"
-        ? [523, 784, 1047]
-        : kind === "character"
-          ? [440, 659, 880]
-          : [740, 990];
+      kind === "back"
+        ? [660, 495, 330]
+        : kind === "equip"
+          ? [523, 784, 1047]
+          : kind === "character"
+            ? [440, 659, 880]
+            : [740, 990];
     notes.forEach((frequency, i) => {
       const o = context!.createOscillator(),
         g = context!.createGain();

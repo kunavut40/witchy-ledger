@@ -1,3 +1,5 @@
+import { useExitMotion } from "./motion";
+import { readFantasy } from "./fantasy/Fantasy";
 import { useEffect, useState, type FormEvent } from "react";
 import { askConfirm } from "./Confirm";
 import { Plus, Pencil, X, Check, History, ArrowDownLeft } from "lucide-react";
@@ -223,7 +225,7 @@ export default function Debts({
 function DebtEditor({
   editor,
   s,
-  close,
+  close: closeImmediately,
   act,
 }: {
   editor: NonNullable<Editor>;
@@ -231,6 +233,8 @@ function DebtEditor({
   close: () => void;
   act: (fn: () => Promise<unknown>, message?: string) => Promise<boolean>;
 }) {
+  const motion = useExitMotion(closeImmediately, readFantasy(s).muted);
+  const close = motion.dismiss;
   const a = editor.account;
   const current = a ? balance(a, s.transactions, today()) : 0;
   const [amount, setAmount] = useState(
@@ -294,7 +298,10 @@ function DebtEditor({
   }
   return (
     <div
-      className="modal-overlay"
+      className={
+        "modal-overlay motion-surface " +
+        (motion.leaving ? "motion-leaving" : "")
+      }
       onMouseDown={(e) => e.target === e.currentTarget && !busy && close()}
     >
       <section

@@ -1,3 +1,5 @@
+import { motionDuration, OPEN_MS } from "./motion";
+import { sceneGust } from "./SceneTransition";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { State } from "./domain";
@@ -41,13 +43,15 @@ export default function EntryCategories({
     [],
   );
   function dismiss() {
+    if (leaving) return;
     setLeaving(true);
+    sound("back");
     exit.current = setTimeout(() => {
       setOrbit(false);
       setLeaving(false);
       setHover("");
       trigger.current?.focus();
-    }, 180);
+    }, motionDuration(OPEN_MS));
   }
   useEffect(() => {
     if (!orbit) return;
@@ -133,6 +137,7 @@ export default function EntryCategories({
             held.current = false;
             return;
           }
+          sceneGust(expanded ? "out" : "in");
           setExpanded(!expanded);
           sound();
         }}
@@ -156,6 +161,7 @@ export default function EntryCategories({
                 type="button"
                 aria-label={c.name}
                 onClick={() => {
+                  sceneGust("in");
                   change(c.id, "");
                   setExpanded(false);
                   sound("character");
@@ -168,7 +174,7 @@ export default function EntryCategories({
         </div>
       )}
       <label>✧ หมวดย่อย</label>
-      <div className="entry-orbits">
+      <div key={main} className="entry-orbits">
         {children.map((c) => (
           <button
             type="button"
@@ -176,6 +182,7 @@ export default function EntryCategories({
             aria-label={c.name}
             className={sub === c.id ? "selected" : ""}
             onClick={() => {
+              sceneGust("in");
               change(main, c.id);
               sound();
             }}

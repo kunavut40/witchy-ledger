@@ -1,5 +1,11 @@
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
+## ล่าสุด 0.6.9-local-test — ต่อจาก GitHub0.6.8
+
+อ่าน RELEASE-0.6.9.md ก่อน ใช้base55c08acจากGitHub0.6.8 ตามคำสั่งผู้ใช้ล่าสุด แยกworktreewitchy-ledger-069 ไม่รวมlocal0.6.3เก่า เพิ่มoverlay50%/blur3px unified fade-zoom240ms ขั้นถัดไป480ms reverse+back sound ไอคอนเมนูต่างกันและanimation เลิกสร้างใบไม้ลม ทดสอบ70กรณีผ่านและตรวจUIมือถือ393×852ผ่าน CUA ไม่มีS25ต่ออยู่
+
+สำคัญ: APK068ที่GitHubเป็นapp.witchyledger.preview sign e6826d9d...; ไม่มีkeyนั้นบนเครื่องนี้ APK069จึงเป็นapp.witchyledger.offline versionCode15 sign a6f10620... ติดตั้งแยกจากPreviewและอัปเดตOfflineเดิมได้ ห้ามบอกว่าติดตั้งทับPreviewได้ ต้องใช้keyเดิมจากบ้านเพื่อสร้างPreviewupdateโดยตรง ข้อมูลด้านล่างเป็นประวัติและบันทึกส่งต่อเก่าที่ยังไม่ได้อัปเดตตามงานบ้าน
+
 ## ล่าสุด 0.6.3-local-test
 
 อ่าน RELEASE-LOCAL-0.6.3.md ก่อน ทำต่อlocal0.6.2 ไม่รวมGitHub เพิ่มRadialEntry/EntryCategories/CompactHome ตั้งค่าวงจากแถบหัวเมนู+ กรอบRankFrameแบบมงกุฎใบไม้ และจำกัดความกว้างviewport Tests35ผ่าน versionCode9 key/packageเดิม ยังไม่มีการลองสัมผัสบนS25จริง ตรวจresponsiveต่อที่บ้าน ส่วนเสื้อผ้ายังรอlayerassets

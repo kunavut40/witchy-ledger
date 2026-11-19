@@ -1,5 +1,6 @@
+import { useExitMotion } from "./motion";
 import { testUnlocked } from "./testing";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { X, Check } from "lucide-react";
 import { db } from "./db";
 import type { State } from "./domain";
@@ -37,7 +38,7 @@ export function getProfile(settings: State["settings"]) {
 export default function Profile({
   settings,
   transactions,
-  close,
+  close: closeImmediately,
   act,
 }: {
   settings: State["settings"];
@@ -45,6 +46,15 @@ export default function Profile({
   close: () => void;
   act: (fn: () => Promise<unknown>, message?: string) => Promise<boolean>;
 }) {
+  const motion = useExitMotion(
+    closeImmediately,
+    parseFantasy(settings.find((x) => x.id === "fantasy.state")?.value).muted,
+  );
+  const close = motion.dismiss;
+  useEffect(() => {
+    document.addEventListener("witchy-profile-close", close);
+    return () => document.removeEventListener("witchy-profile-close", close);
+  }, [close]);
   const current = getProfile(settings),
     p = progression(transactions);
   const [avatar, setAvatar] = useState(
@@ -82,7 +92,12 @@ export default function Profile({
     if (ok) close();
   }
   return (
-    <div className="modal-overlay">
+    <div
+      className={
+        "modal-overlay motion-surface " +
+        (motion.leaving ? "motion-leaving" : "")
+      }
+    >
       <section
         className="modal adventure-modal"
         role="dialog"

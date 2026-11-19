@@ -1,3 +1,4 @@
+import { useExitMotion } from "./motion";
 import { useEffect, useRef, useState } from "react";
 import type { State } from "./domain";
 import Pixel, { iconLabels, icons, categoryIcon } from "./Pixel";
@@ -75,7 +76,7 @@ export default function RadialEntry({
   const [kind, setKind] = useState<Kind | null>(null);
   const [slot, setSlot] = useState<number | null>(null);
   const [settings, setSettings] = useState(false);
-  const [leaving, setLeaving] = useState(false);
+  const { leaving, dismiss: dismissMotion } = useExitMotion(close, muted);
   const [error, setError] = useState("");
   const [prefs, setPrefs] = useState(() => readRadial(s));
   const [iconEdits, setIconEdits] = useState<Record<string, string>>({});
@@ -101,10 +102,16 @@ export default function RadialEntry({
   function dismiss() {
     clearTimeout(hold.current);
     clearTimeout(dwell.current);
-    setLeaving(true);
-    menuSound("select", muted);
-    exit.current = setTimeout(close, 180);
+    dismissMotion();
   }
+  useEffect(() => {
+    const back = (e: Event) => {
+      e.preventDefault();
+      dismiss();
+    };
+    document.addEventListener("witchy-radial-back", back);
+    return () => document.removeEventListener("witchy-radial-back", back);
+  }, [muted]);
   function select(k: Kind) {
     setKind(k);
     setSlot(null);
@@ -410,6 +417,7 @@ export default function RadialEntry({
         </section>
       ) : (
         <section
+          key={String(kind) + String(slot)}
           className={
             "radial-stage " +
             (kind || "idle") +

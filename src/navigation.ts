@@ -1,3 +1,4 @@
+import { sceneGust } from "./SceneTransition";
 import { useRef, useState } from "react";
 export function isBackSwipe(
   start: { x: number; y: number; time: number },
@@ -16,6 +17,7 @@ export function usePageNavigation(initial = "dashboard") {
   const [page, set] = useState(initial);
   const navigate = (next: string) => {
     if (next === current.current) return;
+    sceneGust("in");
     history.current.push(current.current);
     current.current = next;
     set(next);
@@ -23,6 +25,8 @@ export function usePageNavigation(initial = "dashboard") {
   const back = () => {
     const prev = history.current.pop();
     if (prev === undefined) return false;
+    sceneGust("out");
+    window.dispatchEvent(new Event("witchy-back-sound"));
     current.current = prev;
     set(prev);
     return true;

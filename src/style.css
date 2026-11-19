@@ -6812,3 +6812,137 @@ button:active {
     opacity: 0 !important;
   }
 }
+
+/* Unified motion 0.6.9: opacity applies to the scrim, never its controls. */
+.radial-scrim {
+  animation: witchy-surface-in 0.24s ease-out both !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+.radial-scrim:before {
+  background: rgba(252, 249, 255, 0.5) !important;
+  backdrop-filter: blur(3px) !important;
+}
+.radial-scrim.leaving {
+  animation: witchy-surface-out 0.24s ease-in both !important;
+  pointer-events: none;
+}
+.radial-stage,
+.radial-settings,
+.entry-orbits,
+.category-orbit-stage {
+  animation: witchy-surface-in 0.48s ease-out both !important;
+}
+.category-orbit-overlay {
+  background: rgba(252, 249, 255, 0.5) !important;
+  backdrop-filter: blur(3px) !important;
+  animation: witchy-surface-in 0.24s ease-out both !important;
+}
+.category-orbit-overlay.leaving {
+  animation: witchy-surface-out 0.24s ease-in both !important;
+}
+.scene-gust.unified-motion {
+  animation: witchy-surface-in 0.48s ease-out both !important;
+  backdrop-filter: blur(2px);
+  background: rgba(252, 249, 255, 0.5);
+  pointer-events: none;
+}
+.scene-gust.unified-motion.gust-out {
+  animation: witchy-surface-out 0.48s ease-in both !important;
+}
+body:has(.radial-scrim) .scene-gust {
+  background: transparent;
+  backdrop-filter: none;
+}
+.detail-sheet.motion-surface {
+  animation: witchy-surface-in 0.24s ease-out both !important;
+}
+.detail-sheet.motion-leaving,
+.editor-leaving {
+  animation: witchy-surface-out 0.24s ease-in both !important;
+  pointer-events: none;
+}
+.more-menu .pixel-art-icon {
+  animation: menu-icon-breathe 3.6s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+.more-menu button:nth-of-type(2n) .pixel-art-icon {
+  animation-delay: -1.6s;
+}
+.entry-orbits button:active {
+  scale: 0.94;
+}
+.entry-orbits button.selected {
+  transition:
+    box-shadow 0.24s,
+    outline-color 0.24s;
+  animation: witchy-select 0.48s ease-out;
+}
+@keyframes witchy-surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes witchy-surface-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+@keyframes menu-icon-breathe {
+  50% {
+    transform: translateY(-2px) rotate(3deg);
+    filter: drop-shadow(0 0 3px #dcc3a8);
+  }
+}
+@keyframes witchy-select {
+  50% {
+    scale: 1.035;
+    filter: brightness(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radial-scrim,
+  .radial-scrim.leaving,
+  .radial-stage,
+  .radial-settings,
+  .entry-orbits,
+  .category-orbit-overlay,
+  .category-orbit-overlay.leaving,
+  .detail-sheet.motion-surface,
+  .detail-sheet.motion-leaving,
+  .editor-leaving,
+  .scene-gust.unified-motion,
+  .more-menu .pixel-art-icon {
+    animation: none !important;
+    transition: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+.motion-surface {
+  animation: witchy-surface-in 0.24s ease-out both !important;
+}
+.motion-surface.motion-leaving {
+  animation: witchy-surface-out 0.24s ease-in both !important;
+  pointer-events: none;
+}
+.more-menu-overlay {
+  background: rgba(252, 249, 255, 0.5) !important;
+  backdrop-filter: blur(3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-surface,
+  .motion-surface.motion-leaving {
+    animation: none !important;
+  }
+}

@@ -1,3 +1,4 @@
+import { motionDuration, OPEN_MS, useExitMotion } from "./motion";
 import SceneTransition, { sceneGust } from "./SceneTransition";
 import { testUnlocked } from "./testing";
 import { CharacterAppearanceContext } from "./CharacterArt";
@@ -211,21 +212,22 @@ export default function App() {
       });
       if (!document.dispatchEvent(overlayBack)) return true;
       if (moreOpen) {
-        setMoreOpen(false);
+        moreMotion.dismiss();
         return true;
       }
       if (modal) {
         void askConfirm("ยกเลิกการแก้ไขและย้อนกลับ? ข้อมูลที่ยังไม่บันทึกจะไม่ถูกเก็บ").then(
-          (ok) => ok && setModal(null),
+          (ok) =>
+            ok && document.dispatchEvent(new Event("witchy-editor-close")),
         );
         return true;
       }
       if (showProfile) {
-        setShowProfile(false);
+        document.dispatchEvent(new Event("witchy-profile-close"));
         return true;
       }
       if (quickAdd) {
-        setQuickAdd(false);
+        document.dispatchEvent(new Event("witchy-radial-back"));
         return true;
       }
       if (detail) {
@@ -252,6 +254,16 @@ export default function App() {
     }
   }, [modal?.type]);
   const liveState = useLiveQuery(() => readState(), [], undefined);
+  const moreMotion = useExitMotion(
+    () => setMoreOpen(false),
+    liveState ? readFantasy(liveState).muted : true,
+  );
+  useEffect(() => {
+    const back = () =>
+      menuSound("back", liveState ? readFantasy(liveState).muted : false);
+    window.addEventListener("witchy-back-sound", back);
+    return () => window.removeEventListener("witchy-back-sound", back);
+  }, [liveState]);
   useEffect(() => {
     if (notice) {
       const t = setTimeout(() => {
@@ -519,7 +531,12 @@ export default function App() {
           const target = (e.target as HTMLElement).closest(
             "button,select,input[type=radio],input[type=checkbox]",
           );
-          if (target)
+          if (
+            target &&
+            !/ปิด|ย้อนกลับ|ยกเลิก/.test(
+              target.getAttribute("aria-label") || target.textContent || "",
+            )
+          )
             menuSound(
               target.matches(".hero-picker button") ? "character" : "select",
               fantasy.muted,
@@ -565,7 +582,7 @@ export default function App() {
             <div className="local-label">
               <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
             </div>
-            <small>Witchy Ledger · v0.6.3-local-test</small>
+            <small>Witchy Ledger · v0.6.9-local-test</small>
           </div>
         </aside>
         <div className="main-shell">
@@ -1716,7 +1733,9 @@ export default function App() {
             aria-label={quickAdd ? "ปิดเพิ่มรายการ" : "เพิ่มรายรับหรือรายจ่าย"}
             aria-expanded={quickAdd}
             onClick={() => {
-              setQuickAdd(!quickAdd);
+              if (quickAdd)
+                document.dispatchEvent(new Event("witchy-radial-back"));
+              else setQuickAdd(true);
               menuSound("equip", fantasy.muted);
             }}
           >
@@ -1735,14 +1754,22 @@ export default function App() {
           <button
             aria-label="เมนูเพิ่มเติม"
             aria-expanded={moreOpen}
-            onClick={() => setMoreOpen(!moreOpen)}
+            onClick={() =>
+              moreOpen ? moreMotion.dismiss() : setMoreOpen(true)
+            }
           >
             <Pixel name="ui-settings" size={32} />
             <span>เพิ่มเติม</span>
           </button>
         </nav>
         {moreOpen && (
-          <div className="more-menu-overlay" onClick={() => setMoreOpen(false)}>
+          <div
+            className={
+              "more-menu-overlay motion-surface " +
+              (moreMotion.leaving ? "motion-leaving" : "")
+            }
+            onClick={() => moreMotion.dismiss()}
+          >
             <section
               className="more-menu"
               role="dialog"
@@ -1752,7 +1779,7 @@ export default function App() {
               <header>
                 <h3>✧ สมุดเมนูเวทมนตร์</h3>
                 <button
-                  onClick={() => setMoreOpen(false)}
+                  onClick={() => moreMotion.dismiss()}
                   aria-label="ปิดเมนูเพิ่มเติม"
                 >
                   ×
@@ -1768,17 +1795,26 @@ export default function App() {
                     key={id}
                     onClick={() => {
                       setPage(id);
-                      setMoreOpen(false);
+                      moreMotion.dismiss();
                       menuSound("select", fantasy.muted);
                     }}
                   >
                     <Pixel
                       name={
-                        id === "settings"
-                          ? "ui-settings"
-                          : id === "room"
-                            ? "ui-home"
-                            : "ui-book"
+                        (
+                          {
+                            settings: "ui-settings",
+                            room: "ui-home",
+                            wardrobe: "fantasy-33",
+                            categories: "fantasy-20",
+                            accounts: "fantasy-46",
+                            periods: "fantasy-22",
+                            budgets: "fantasy-42",
+                            savings: "fantasy-45",
+                            debts: "fantasy-38",
+                            backup: "fantasy-21",
+                          } as Record<string, string>
+                        )[id] || "ui-analysis"
                       }
                       size={30}
                     />
@@ -1934,10 +1970,15 @@ function Editor({
   );
   const close = () => {
     if (editorLeaving) return;
+    menuSound("back", readFantasy(s).muted);
     setEditorLeaving(true);
-    editorExit.current = setTimeout(closeImmediately, 180);
+    editorExit.current = setTimeout(closeImmediately, motionDuration(OPEN_MS));
   };
   useEffect(() => () => clearTimeout(editorExit.current), []);
+  useEffect(() => {
+    document.addEventListener("witchy-editor-close", close);
+    return () => document.removeEventListener("witchy-editor-close", close);
+  }, [editorLeaving]);
   const [kind, setKind] = useState(
     modal.type === "transaction"
       ? modal.value?.kind || "expense"
