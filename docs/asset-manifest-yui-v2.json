@@ -1,0 +1,18 @@
+[
+  {
+    "path": "public/wardrobe/heads-v2.png",
+    "source": "OpenAI imagegen exec-9335b0cd-ad32-4b29-b66c-91afbdf6b0dc.png",
+    "references": [
+      "public/wardrobe/heads.png",
+      "public/yui-icon.png"
+    ],
+    "license": "AI-generated project artwork",
+    "size": [
+      2560,
+      1024
+    ],
+    "require_alpha": true,
+    "normalization": "512px cells; Yui chin (256,205), mirrored screen-right; Momo row unchanged byte-for-byte in decoded RGBA",
+    "technical_checks_passed": true
+  }
+]

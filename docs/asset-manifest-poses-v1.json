@@ -1,0 +1,385 @@
+[
+  {
+    "path": "public/wardrobe/poses-v1.png",
+    "source": "OpenAI imagegen exec-84bdd705-7fc3-43a9-8bd9-4f316a8eec29.png",
+    "reference": "public/wardrobe/bodies.png",
+    "license": "AI-generated project artwork",
+    "size": [
+      4096,
+      1536
+    ],
+    "grid": [
+      8,
+      3
+    ],
+    "require_alpha": true,
+    "rows": [
+      "hands-on-hips",
+      "hands-clasped",
+      "sleepy-hand-raised"
+    ],
+    "anchors": [
+      {
+        "row": 0,
+        "outfit": 0,
+        "source_neck": [
+          148.53,
+          29
+        ],
+        "source_feet": 242,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 1,
+        "source_neck": [
+          153.02,
+          29
+        ],
+        "source_feet": 242,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 2,
+        "source_neck": [
+          156.62,
+          29
+        ],
+        "source_feet": 243,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 3,
+        "source_neck": [
+          144.63,
+          29
+        ],
+        "source_feet": 243,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 4,
+        "source_neck": [
+          136.4,
+          29
+        ],
+        "source_feet": 243,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 5,
+        "source_neck": [
+          135.76,
+          29
+        ],
+        "source_feet": 241,
+        "scale": 1.3443,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 6,
+        "source_neck": [
+          135.47,
+          29
+        ],
+        "source_feet": 243,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 0,
+        "outfit": 7,
+        "source_neck": [
+          136.67,
+          29
+        ],
+        "source_feet": 243,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 0,
+        "source_neck": [
+          142.68,
+          27
+        ],
+        "source_feet": 239,
+        "scale": 1.3443,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 1,
+        "source_neck": [
+          145.4,
+          27
+        ],
+        "source_feet": 239,
+        "scale": 1.3443,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 2,
+        "source_neck": [
+          145.74,
+          27
+        ],
+        "source_feet": 240,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 3,
+        "source_neck": [
+          140.1,
+          27
+        ],
+        "source_feet": 241,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 4,
+        "source_neck": [
+          134.93,
+          27
+        ],
+        "source_feet": 240,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 5,
+        "source_neck": [
+          134.76,
+          27
+        ],
+        "source_feet": 239,
+        "scale": 1.3443,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 6,
+        "source_neck": [
+          133.21,
+          27
+        ],
+        "source_feet": 240,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 1,
+        "outfit": 7,
+        "source_neck": [
+          133.23,
+          27
+        ],
+        "source_feet": 240,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 0,
+        "source_neck": [
+          142.95,
+          25
+        ],
+        "source_feet": 238,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 1,
+        "source_neck": [
+          145.76,
+          25
+        ],
+        "source_feet": 238,
+        "scale": 1.338,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 2,
+        "source_neck": [
+          145.58,
+          25
+        ],
+        "source_feet": 239,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 3,
+        "source_neck": [
+          143.09,
+          25
+        ],
+        "source_feet": 241,
+        "scale": 1.3194,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 4,
+        "source_neck": [
+          138.83,
+          25
+        ],
+        "source_feet": 239,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 5,
+        "source_neck": [
+          135.93,
+          25
+        ],
+        "source_feet": 239,
+        "scale": 1.3318,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 6,
+        "source_neck": [
+          134.0,
+          25
+        ],
+        "source_feet": 240,
+        "scale": 1.3256,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      },
+      {
+        "row": 2,
+        "outfit": 7,
+        "source_neck": [
+          133.81,
+          25
+        ],
+        "source_feet": 240,
+        "scale": 1.3256,
+        "target_neck": [
+          256,
+          205
+        ],
+        "target_feet": 490
+      }
+    ],
+    "technical_checks_passed": true
+  }
+]

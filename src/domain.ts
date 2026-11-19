@@ -43,6 +43,10 @@ export interface Transaction {
   tags: string;
   recurring: boolean;
   createdAt: string;
+  /** Explicit user-entered coffee quantities; absence means unknown. */
+  coffee?: { cups: number; partnerCups: number | null };
+  entrySource?: "quick" | "manual";
+  incomeSource?: string;
 }
 export interface Budget {
   id: string;
@@ -172,6 +176,24 @@ export function nextPeriod(p: Period): Period {
   };
 }
 export function validateTransaction(t: Transaction, s: State) {
+  if (
+    t.incomeSource !== undefined &&
+    (typeof t.incomeSource !== "string" || t.incomeSource.length > 80)
+  )
+    throw Error("แหล่งรายได้ต้องเป็นข้อความไม่เกิน 80 ตัวอักษร");
+  if (
+    t.coffee &&
+    (!Number.isSafeInteger(t.coffee.cups) ||
+      t.coffee.cups < 1 ||
+      t.coffee.cups > 100 ||
+      (t.coffee.partnerCups !== null &&
+        (!Number.isSafeInteger(t.coffee.partnerCups) ||
+          t.coffee.partnerCups < 0 ||
+          t.coffee.partnerCups > t.coffee.cups)))
+  )
+    throw Error(
+      "จำนวนกาแฟต้องเป็นจำนวนเต็ม 1–100 แก้ว และจำนวนของแฟนต้องไม่เกินจำนวนรวม",
+    );
   if (!t.title.trim()) throw Error("กรุณาระบุชื่อรายการ");
   if (
     !Number.isSafeInteger(t.amount) ||

@@ -257,7 +257,7 @@ export default function App() {
       const t = setTimeout(() => {
         setNotice("");
         setQuickUndo("");
-      }, 4500);
+      }, 1250);
       return () => clearTimeout(t);
     }
   }, [notice]);
@@ -1814,6 +1814,7 @@ export default function App() {
                       saveTransaction({
                         ...emptyTx(),
                         id: quickId,
+                        entrySource: "quick",
                         kind,
                         categoryId: c.id,
                         accountId: acc.id,
@@ -1857,7 +1858,7 @@ export default function App() {
             act={act}
           />
         )}
-        <CompanionWidget s={s} dashboard={page === "dashboard"} />
+        <CompanionWidget s={s} dashboard={page === "dashboard"} page={page} />
         {detail && (
           <DetailSheet
             key={detail}
@@ -2009,6 +2010,8 @@ function Editor({
     const str = (k: string) => String(f.get(k) || "").trim();
     const result = await act(async () => {
       if (modal.type === "transaction") {
+        if (str("partnerCups") && !str("coffeeCups"))
+          throw Error("กรุณาระบุจำนวนแก้วรวมก่อนระบุจำนวนที่ซื้อให้แฟน");
         const t: Transaction = {
           ...(tx || emptyTx()),
           kind: kind as Transaction["kind"],
@@ -2032,6 +2035,23 @@ function Editor({
               (s.categories.find((c) => c.id === (subCat || mainCat))?.name ||
                 kind),
           recurring: f.has("recurring"),
+          entrySource: tx?.entrySource || "manual",
+          incomeSource: kind === "income" ? str("incomeSource") : undefined,
+          coffee:
+            str("coffeeCups") &&
+            kind === "expense" &&
+            /กาแฟ|coffee/i.test(
+              s.categories.find((c) => c.id === (subCat || mainCat))?.name ||
+                "",
+            )
+              ? {
+                  cups: Number(str("coffeeCups")),
+                  partnerCups:
+                    str("partnerCups") === ""
+                      ? null
+                      : Number(str("partnerCups")),
+                }
+              : undefined,
         };
         await saveTransaction(t);
         sceneGust("out");
@@ -2182,7 +2202,11 @@ function Editor({
       ));
   return (
     <div
-      className={"modal-overlay " + (editorLeaving ? "editor-leaving" : "")}
+      className={
+        "modal-overlay " +
+        (modal.type === "transaction" ? "transaction-editor " : "") +
+        (editorLeaving ? "editor-leaving" : "")
+      }
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !busy) close();
       }}
@@ -2264,6 +2288,57 @@ function Editor({
                   }}
                 />
               )}
+              {kind === "income" && (
+                <label>
+                  แหล่งรายได้จริง (ไม่บังคับ)
+                  <input
+                    name="incomeSource"
+                    maxLength={80}
+                    defaultValue={tx?.incomeSource}
+                    placeholder="เช่น บริษัทที่ทำงาน / งานลูกค้ารายหนึ่ง"
+                  />
+                </label>
+              )}
+              {kind === "expense" &&
+                /กาแฟ|coffee/i.test(
+                  s.categories.find((c) => c.id === (subCat || mainCat))
+                    ?.name || "",
+                ) && (
+                  <fieldset className="coffee-details">
+                    <legend>รายละเอียดกาแฟ (ไม่บังคับ)</legend>
+                    <p className="tiny muted">
+                      ระบุเมื่อต้องการให้ผู้ช่วยนับแก้ว เว้นว่างไว้หากไม่ทราบ
+                    </p>
+                    <div className="form-grid">
+                      <label>
+                        จำนวนแก้วรวม
+                        <input
+                          name="coffeeCups"
+                          type="number"
+                          inputMode="numeric"
+                          min="1"
+                          max="100"
+                          step="1"
+                          defaultValue={tx?.coffee?.cups}
+                          placeholder="ไม่ทราบ"
+                        />
+                      </label>
+                      <label>
+                        ในจำนวนนี้ ซื้อให้แฟน
+                        <input
+                          name="partnerCups"
+                          type="number"
+                          inputMode="numeric"
+                          min="0"
+                          max="100"
+                          step="1"
+                          defaultValue={tx?.coffee?.partnerCups ?? ""}
+                          placeholder="ไม่ระบุผู้รับ"
+                        />
+                      </label>
+                    </div>
+                  </fieldset>
+                )}
               <div className="form-grid">
                 <fieldset className="entry-accounts">
                   <legend>✧ {kind === "transfer" ? "บัญชีต้นทาง" : "บัญชี"}</legend>

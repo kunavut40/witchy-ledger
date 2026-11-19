@@ -4,3 +4,4 @@ dist/
 *.jks
 *.apk
 *.apk.idsig
+.local-backups/

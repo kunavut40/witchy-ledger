@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "assets": [
+    {
+      "path": "public/wardrobe/poses-v1.png",
+      "format": "PNG",
+      "mode": "RGBA",
+      "width": 4096,
+      "height": 1536,
+      "bytes": 1527239,
+      "color_count": ">65535",
+      "has_alpha": true,
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "transparent_pixels": 5480433,
+      "content_bounds": [
+        157,
+        205,
+        3952,
+        1518
+      ],
+      "problems": []
+    }
+  ]
+}

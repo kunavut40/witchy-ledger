@@ -1,3 +1,4 @@
+import dialogueBank from "./dialogueBank.json";
 import { progression } from "../progression";
 import { summary, categorySpend, balance, today, type State } from "../domain";
 export type Emotion =
@@ -8,9 +9,13 @@ export type Emotion =
   | "annoyed"
   | "embarrassed"
   | "worried"
-  | "surprised";
+  | "surprised"
+  | "sleepy"
+  | "proud";
 export type CompanionId = "yui" | "momo";
 export interface FantasyState {
+  animations?: boolean;
+  characterLooks?: Partial<Record<CompanionId, Partial<FantasyState>>>;
   eyeColor?: string;
   catEars?: boolean;
   earrings?: boolean;
@@ -46,11 +51,12 @@ export interface FantasyState {
   dialogueHistory: string[];
 }
 export const defaults: FantasyState = {
+  animations: true,
   mode: true,
   character: "yui",
   hair: 0,
   hairColor: "#24202a",
-  outfit: 0,
+  outfit: 1,
   hat: false,
   glasses: false,
   accessory: "none",
@@ -141,7 +147,7 @@ export function parseFantasy(value?: string): FantasyState {
       outfit:
         Number.isInteger(x.outfit) && x.outfit >= 0 && x.outfit < 26
           ? x.outfit
-          : 0,
+          : defaults.outfit,
       hairColor: /^#[0-9a-f]{6}$/i.test(x.hairColor)
         ? x.hairColor
         : defaults.hairColor,
@@ -189,65 +195,18 @@ export function financialMood(s: State) {
     return { event: "streak", emotion: "happy" as Emotion };
   return { event: "welcome", emotion: "idle" as Emotion };
 }
+/** Compatibility adapter; edit dialogueBank.json, never this mapping. */
 export const lines = {
   yui: {
-    welcome: [
-      "กลับมาแล้วเหรอ… เปิดสมุดบัญชีก่อนสิ ฉันเตรียมไว้ให้แล้ว",
-      "วันนี้บันทึกครบหรือยัง? ไม่ได้เป็นห่วงหรอกนะ แค่ตรวจงานเฉย ๆ",
-      "ค่อย ๆ ทำทีละรายการก็ได้ ฉันรออยู่ตรงนี้",
-      "ห้องเงียบไปหน่อย… อยากเล่าเรื่องวันนี้ผ่านสมุดบัญชีไหม?",
-      "ไม่ต้องสมบูรณ์แบบทุกวันหรอก ขอแค่กลับมาดูแลตัวเองก็พอ",
-    ],
-    budget: [
-      "มีหมวดใช้เกินงบแล้วนะ… ลองเปิดงบประมาณดูด้วย",
-      "ไม่ได้จะบ่น แต่เราควรทบทวนงบรอบนี้หน่อย",
-      "พักดูตัวเลขก่อนก็ได้ ฉันจะอยู่ข้าง ๆ",
-      "งบที่วางไว้เปลี่ยนได้ ถ้าชีวิตจริงเปลี่ยนไป",
-      "ลองตรวจรายการล่าสุดกัน อย่าเพิ่งโทษตัวเองล่ะ",
-    ],
-    saving: [
-      "เงินออมถึงเป้าหมายแล้ว… ทำได้ดีนี่นา",
-      "ฉันเห็นความตั้งใจนะ ถึงจะไม่ได้ชมบ่อยก็เถอะ",
-      "เปิดหน้าเงินออมดูสิ มีเรื่องดีรออยู่",
-      "ความพยายามเล็ก ๆ รวมกันเป็นเรื่องใหญ่ได้นะ",
-      "วันนี้สมควรยิ้มให้ตัวเองสักหน่อยแล้ว",
-    ],
-    streak: [
-      "บันทึกต่อเนื่องเกินเจ็ดวันแล้ว… มีวินัยดีนี่",
-      "ฉันไม่ได้แอบนับหรอกนะ แต่เห็นความพยายามอยู่",
-      "ค่อย ๆ สร้างนิสัยแบบนี้ต่อไปก็พอ",
-      "สมุดบัญชีไม่เหงาแล้วล่ะ มีเธอมาดูแลทุกวัน",
-      "ทำดีแล้วนะ… ไม่ได้พูดซ้ำง่าย ๆ หรอก",
-    ],
+    welcome: dialogueBank.E01.yui,
+    budget: dialogueBank.E14.yui,
+    saving: dialogueBank.E18.yui,
+    streak: dialogueBank.E06.yui,
   },
   momo: {
-    welcome: [
-      "มาแล้ว ๆ! วันนี้มีเรื่องอะไรให้โมโมะช่วยดูบ้าง?",
-      "เปิดสมุดกันเถอะ วันนี้เราจะเก่งขึ้นอีกนิด!",
-      "เลือกชุดใหม่แล้วค่อยจดบัญชีก็ได้นะ แต่อย่าลืมจดล่ะ!",
-      "ห้องนี้อบอุ่นขึ้นเลยเมื่อเธอกลับมา!",
-      "บันทึกทีละนิด แล้วไปเล่นกับแมวกัน!",
-    ],
-    budget: [
-      "งบมีไฟเตือนแล้ว! โมโมะจะอยู่เป็นเพื่อนตอนตรวจนะ",
-      "มาดูหมวดที่เกินงบกัน ค่อย ๆ จัดการได้!",
-      "พักช้อปแล้วทบทวนแผนกันนิดหนึ่งไหม?",
-      "ไม่ต้องตกใจ เรามาอ่านตัวเลขทีละบรรทัด!",
-      "ปรับแผนให้เข้ากับชีวิตจริงกันเถอะ!",
-    ],
-    saving: [
-      "เป้าหมายสำเร็จแล้ว! ขอปรบมือให้เลย!",
-      "เงินออมเติบโตแล้วนะ ฮีโร่ของโมโมะ!",
-      "วันนี้มีข่าวดีในหน้าเงินออม ไปดูกัน!",
-      "พยายามมาขนาดนี้ ภูมิใจได้เต็มที่เลย!",
-      "ดาวดวงใหม่ของห้องนี้คือเธอนี่เอง!",
-    ],
-    streak: [
-      "ว้าว! ต่อเนื่องเจ็ดวันขึ้นไปแล้ว!",
-      "สมุดบัญชีต้องชอบเธอมากแน่ ๆ!",
-      "วันนี้มาต่อสตรีกกันอีกวันเถอะ!",
-      "ความสม่ำเสมอคือพลังเวทของเรา!",
-      "เก่งขึ้นทุกวันเลย โมโมะเห็นนะ!",
-    ],
+    welcome: dialogueBank.E01.momo,
+    budget: dialogueBank.E14.momo,
+    saving: dialogueBank.E18.momo,
+    streak: dialogueBank.E06.momo,
   },
 };

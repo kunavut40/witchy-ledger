@@ -70,7 +70,7 @@ it("ความสนิทเพิ่มได้วันละหนึ่�
   expect(interact(a).affinity).toBe(1);
 });
 it("ข้อมูลรูปลักษณ์เสียใช้ค่าเริ่มต้นโดยไม่ล้ม และไม่อนุมานจำนวนกาแฟ", () => {
-  expect(parseFantasy("bad").outfit).toBe(0);
+  expect(parseFantasy("bad").outfit).toBe(defaults.outfit);
   expect(parseFantasy('{"hair":100,"outfit":-1}').hair).toBe(0);
   expect(financialMood(initialState()).event).toBe("welcome");
 });

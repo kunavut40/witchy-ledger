@@ -4,11 +4,13 @@ export default function Companion({
   appearance: a,
   emotion = "idle",
   talking = false,
+  mouthFrame = 0,
   size = 160,
 }: {
   appearance: FantasyState;
   emotion?: Emotion;
   talking?: boolean;
+  mouthFrame?: number;
   size?: number;
 }) {
   return (
@@ -29,6 +31,7 @@ export default function Companion({
         size={size}
         emotion={emotion}
         talking={talking}
+        mouthFrame={mouthFrame}
         appearance={a}
       />
     </span>

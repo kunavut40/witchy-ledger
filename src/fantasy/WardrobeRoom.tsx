@@ -8,6 +8,7 @@ import Companion from "./Companion";
 import { readFantasy, updateFantasy, FantasySettings } from "./Fantasy";
 import { menuSound } from "./sound";
 import type { FantasyState } from "./model";
+import { readRuntime, RUNTIME_KEY, affinityTier } from "./engine";
 const looks = [
   "เสื้อขาวพื้นฐาน",
   "สเวตเตอร์นักเรียน",
@@ -22,7 +23,14 @@ const hairNames = ["ผมยาวตรง", "ทวินเทล", "บ๊�
 export default function WardrobeRoom({ s }: { s: State }) {
   const a = readFantasy(s),
     unlocked = testUnlocked(s),
-    level = progression(s.transactions).level;
+    level = progression(s.transactions).level,
+    runtime = readRuntime(
+      s.settings.find((x) => x.id === RUNTIME_KEY)?.value,
+      a,
+    ),
+    tier = affinityTier(runtime.characters[a.character].affinity),
+    activeEmotion =
+      runtime.queue.find((x) => x.character === a.character)?.emotion || "idle";
   const [tab, setTab] = useState("outfit"),
     [note, setNote] = useState("");
   async function save(patch: Partial<FantasyState>) {
@@ -59,7 +67,7 @@ export default function WardrobeRoom({ s }: { s: State }) {
           <i className="scene-orb" />
           <i className="scene-crystals" />
           <div className="room-companion">
-            <Companion appearance={a} size={210} />
+            <Companion appearance={a} size={210} emotion={activeEmotion} />
           </div>
           <span className="room-name">
             ✧ ห้องของ{a.character === "yui" ? "ยูอิ" : "โมโมะ"}
@@ -105,7 +113,13 @@ export default function WardrobeRoom({ s }: { s: State }) {
               {bodyIndices.map((id, i) => (
                 <button
                   key={id}
-                  disabled={!unlocked && i > Math.floor(level / 2)}
+                  disabled={
+                    !unlocked &&
+                    i > Math.floor(level / 2) &&
+                    !(tier >= 2 && i === 3) &&
+                    !(tier >= 4 && i === 5) &&
+                    !(tier >= 5 && i === 7)
+                  }
                   className={a.outfit === id ? "selected" : ""}
                   aria-pressed={a.outfit === id}
                   onClick={() => save({ outfit: id })}
@@ -122,7 +136,9 @@ export default function WardrobeRoom({ s }: { s: State }) {
               {hairIndices.map((id, i) => (
                 <button
                   key={id}
-                  disabled={!unlocked && i > Math.floor(level / 2)}
+                  disabled={
+                    !unlocked && i > Math.floor(level / 2) && i > tier - 1
+                  }
                   className={a.hair === id ? "selected" : ""}
                   aria-pressed={a.hair === id}
                   onClick={() => save({ hair: id })}
