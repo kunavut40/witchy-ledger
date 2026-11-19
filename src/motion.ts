@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { menuSound } from "./fantasy/sound";
 export const OPEN_MS = 240,
-  STEP_MS = OPEN_MS * 2;
+  STEP_MS = OPEN_MS;
 export function motionDuration(ms = OPEN_MS) {
   return typeof matchMedia !== "undefined" &&
     matchMedia("(prefers-reduced-motion: reduce)").matches

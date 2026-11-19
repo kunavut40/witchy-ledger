@@ -6946,3 +6946,24 @@ body:has(.radial-scrim) .scene-gust {
     animation: none !important;
   }
 }
+
+/* 0.6.10: the same short surface animation at every selection depth. */
+.radial-stage,
+.radial-settings,
+.entry-orbits,
+.category-orbit-stage {
+  animation: witchy-surface-in 0.24s ease-out both !important;
+}
+.entry-orbits button.selected {
+  animation: witchy-select 0.24s ease-out;
+}
+/* The central +/X is the only close control for quick entry. */
+@media (prefers-reduced-motion: reduce) {
+  .radial-stage,
+  .radial-settings,
+  .entry-orbits,
+  .category-orbit-stage,
+  .entry-orbits button.selected {
+    animation: none !important;
+  }
+}

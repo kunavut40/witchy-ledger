@@ -571,9 +571,6 @@ export default function RadialEntry({
         </section>
       )}
       {error && <p role="alert">{error}</p>}
-      <button className="radial-close" aria-label="ปิดเมนูบันทึก" onClick={dismiss}>
-        ×
-      </button>
     </div>
   );
 }

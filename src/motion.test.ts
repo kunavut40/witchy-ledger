@@ -1,9 +1,9 @@
 import { expect, it, vi, afterEach } from "vitest";
 import { OPEN_MS, STEP_MS, motionDuration } from "./motion";
 afterEach(() => vi.unstubAllGlobals());
-it("uses twice the plus duration for stage transitions", () => {
+it("uses one short duration for plus and stage transitions", () => {
   expect(OPEN_MS).toBe(240);
-  expect(STEP_MS).toBe(OPEN_MS * 2);
+  expect(STEP_MS).toBe(OPEN_MS);
   vi.stubGlobal("matchMedia", () => ({ matches: false }));
   expect(motionDuration()).toBe(240);
 });

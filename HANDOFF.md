@@ -1,5 +1,9 @@
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
+## ล่าสุด 0.6.10-local-test — แก้motionช้าและปุ่มXซ้ำ
+
+อ่าน RELEASE-0.6.10.md ก่อน ยกเลิกglobal washในSceneTransition ใช้surface.animate240msตรงส่วนที่เลือก; STEP_MS=OPEN_MS=240; ลบradial-closeให้ใช้central-add+/Xเพียงปุ่มเดียว เพิ่มsound peak gain0.075 เทียบเดิม0.035 Tests70ผ่านและCUAตรวจ393×852แล้ว app.witchyledger.offline versionCode16/keyเดิม อัปเดตOffline0.6.9ได้ Preview0.6.8เป็นคนละpackage/key ยังไม่มีS25ให้ทดสอบเสียงจริง
+
 ## ล่าสุด 0.6.9-local-test — ต่อจาก GitHub0.6.8
 
 อ่าน RELEASE-0.6.9.md ก่อน ใช้base55c08acจากGitHub0.6.8 ตามคำสั่งผู้ใช้ล่าสุด แยกworktreewitchy-ledger-069 ไม่รวมlocal0.6.3เก่า เพิ่มoverlay50%/blur3px unified fade-zoom240ms ขั้นถัดไป480ms reverse+back sound ไอคอนเมนูต่างกันและanimation เลิกสร้างใบไม้ลม ทดสอบ70กรณีผ่านและตรวจUIมือถือ393×852ผ่าน CUA ไม่มีS25ต่ออยู่

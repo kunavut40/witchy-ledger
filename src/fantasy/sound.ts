@@ -21,7 +21,7 @@ export function menuSound(kind = "select", muted = false) {
       o.connect(g);
       g.connect(context!.destination);
       g.gain.setValueAtTime(0, t + i * 0.045);
-      g.gain.linearRampToValueAtTime(0.035, t + i * 0.045 + 0.008);
+      g.gain.linearRampToValueAtTime(0.075, t + i * 0.045 + 0.008);
       g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.045 + 0.12);
       o.start(t + i * 0.045);
       o.stop(t + i * 0.045 + 0.14);
