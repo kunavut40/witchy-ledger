@@ -1,3 +1,7 @@
+## ล่าสุด 0.6.12-local-test — Performance / calendar / dialogue
+
+อ่าน docs/PERFORMANCE-FANTASY-UI-UPDATE.md ก่อนทำต่อ branch feature/performance-fantasy-ui, implementation commit a180e67; ไอคอนนิ่งตอนว่าง ใช้ shared backdrop/calendar, period manager, บทพูดครึ่งตัวและปิดหลังข้อความครบ 1250ms Tests79ผ่าน APK Offline versionCode18/certเดิม ตรวจไฟล์เว็บ41รายการตรงกับdistแล้ว Browser393/320/412/desktop,6สี,Classic/Fantasy,offline cacheตรวจแล้ว ยังไม่ทดสอบS25จริงหรือวัดFPS ไม่ push/merge/release ตามคำสั่งงานนี้ สำรองซอร์สก่อนแก้ไว้แยก ไม่ใช่สำรองฐานข้อมูล
+
 # Character restoration
 
 Scope: restore the attached Character Bible on the existing app, preserving the completed 1.25-second notice and Yui face fixes.
@@ -58,3 +62,4 @@ Added four theme-colored leaves and three thin wind streaks, retained preset/man
 ## Follow-up — APK packaged for phone testing
 
 Built `WitchyLedger-0.6.8.apk` from the current production web build. Verified APK signature, application ID/version, matching certificate with 0.6.7, and byte-matching packaged web/character assets. Uses the existing local signing key; no key or build tools are published. APK and SHA-256 checksum are included for GitHub download. Physical-phone testing remains for the user.
+

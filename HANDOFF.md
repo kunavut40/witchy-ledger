@@ -1,3 +1,7 @@
+## ล่าสุด 0.6.12-local-test — Performance / calendar / dialogue
+
+อ่าน docs/PERFORMANCE-FANTASY-UI-UPDATE.md ก่อนทำต่อ branch feature/performance-fantasy-ui, implementation commit a180e67; ไอคอนนิ่งตอนว่าง ใช้ shared backdrop/calendar, period manager, บทพูดครึ่งตัวและปิดหลังข้อความครบ 1250ms Tests79ผ่าน APK Offline versionCode18/certเดิม ตรวจไฟล์เว็บ41รายการตรงกับdistแล้ว Browser393/320/412/desktop,6สี,Classic/Fantasy,offline cacheตรวจแล้ว ยังไม่ทดสอบS25จริงหรือวัดFPS ไม่ push/merge/release ตามคำสั่งงานนี้ สำรองซอร์สก่อนแก้ไว้แยก ไม่ใช่สำรองฐานข้อมูล
+
 # Witchy Ledger — ส่งต่องานที่บ้าน
 
 ## ล่าสุด 0.6.11-local-test — Grand Fantasy & half-body companion
@@ -67,3 +71,4 @@ Android source อยู่ android/ ไม่ใช่ Gradle project: build-ap
 Git เก็บ source/assets/tests ไม่ได้เก็บ IndexedDB ของผู้ใช้ ข้อมูลการเงินต้อง backup JSON ผ่านแอปเองก่อนย้ายเครื่อง APK กับเบราว์เซอร์มีข้อมูลแยกกัน ห้ามเพิ่มไฟล์ JSON การเงินจริงหรือ signing keystore เข้า repo
 
 ก่อนลงมือรอบต่อไป ตรวจ git status และสร้างจุดย้อนกลับ รักษางานที่ยังไม่ commit ห้าม reset/clean ห้ามเปลี่ยนสูตรการเงินหรือ progression โดยไม่ได้รับอนุญาต
+
