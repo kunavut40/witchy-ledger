@@ -12,3 +12,9 @@ it("does not keep reduced-motion users waiting for an invisible exit", () => {
   expect(motionDuration()).toBe(0);
   expect(motionDuration(STEP_MS)).toBe(0);
 });
+it("finishes immediately while backgrounded or with app animation disabled", () => {
+  vi.stubGlobal("document", { hidden: true, querySelector: () => null });
+  expect(motionDuration()).toBe(0);
+  vi.stubGlobal("document", { hidden: false, querySelector: () => ({}) });
+  expect(motionDuration()).toBe(0);
+});

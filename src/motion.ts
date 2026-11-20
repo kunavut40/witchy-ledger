@@ -3,6 +3,12 @@ import { menuSound } from "./fantasy/sound";
 export const OPEN_MS = 240,
   STEP_MS = OPEN_MS;
 export function motionDuration(ms = OPEN_MS) {
+  if (
+    typeof document !== "undefined" &&
+    (document.hidden ||
+      document.querySelector(".app-shell[data-ui-motion=off]"))
+  )
+    return 0;
   return typeof matchMedia !== "undefined" &&
     matchMedia("(prefers-reduced-motion: reduce)").matches
     ? 0

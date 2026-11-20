@@ -1,3 +1,6 @@
+import { createPortal } from "react-dom";
+import { overlayHost, useOverlay, useOverlayTop } from "../ui/SharedBackdrop";
+import { dialoguePlayback } from "./dialoguePlayback";
 import { companionPerformance } from "./performance";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { State } from "../domain";
@@ -28,7 +31,10 @@ export default function CompanionWidget({
     a.character === "yui"
       ? "ไม่ได้รออยู่หรอกนะ… มีรายการให้ฉันจดหรือเปล่า?"
       : "พร้อมจดแล้ว! วันนี้มีเรื่องอะไรมาเล่าให้ฟังบ้าง?";
-  const [count, setCount] = useState(0),
+  const [manual, setManual] = useState(false),
+    [blocked, setBlocked] = useState(""),
+    [foreground, setForeground] = useState(() => !document.hidden),
+    [playback, setPlayback] = useState({ key: "", count: 0 }),
     [problem, setProblem] = useState(false),
     [reduced, setReduced] = useState(
       () => matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -75,82 +81,148 @@ export default function CompanionWidget({
     q.addEventListener("change", on);
     return () => q.removeEventListener("change", on);
   }, []);
-  const letters = useMemo(() => Array.from(line?.text || ""), [line?.key]);
+  const text = line?.text || idleText;
+  const key = page + ":" + a.character + ":" + (line?.key || "manual");
+  const visible =
+    !!a.mode && !a.hidden && blocked !== key && (!!line || manual);
+  const top = useOverlayTop();
+  useOverlay(visible, 200);
+  const active = visible && foreground && top.level <= 200;
+  const letters = useMemo(() => Array.from(text), [text]);
+  const count = playback.key === key ? playback.count : 0;
+  const progress = useRef({ key: "", count: 0 });
   const motion = a.animations !== false && !reduced;
+  const current = useRef({ key, lineKey: line?.key, visible });
+  current.current = { key, lineKey: line?.key, visible };
+  const close = () => {
+    setBlocked(key);
+    setManual(false);
+    if (line) safe(dismissDialogue(line.key));
+  };
+  const closeRef = useRef(close);
+  closeRef.current = close;
   useEffect(() => {
-    setCount(motion ? 0 : Array.from(line?.text || "").length);
-  }, [line?.key, motion]);
+    const on = () => setForeground(!document.hidden);
+    document.addEventListener("visibilitychange", on);
+    return () => document.removeEventListener("visibilitychange", on);
+  }, []);
+  const presentation = useRef({
+    page,
+    character: a.character,
+    lineKey: line?.key,
+    visible,
+  });
   useEffect(() => {
-    if (count >= letters.length || !line || a.hidden || !a.mode) return;
-    const t = setTimeout(() => setCount((n) => n + 1), 27);
-    return () => clearTimeout(t);
-  }, [count, line?.key, a.hidden, a.mode, letters.length]);
+    const previous = presentation.current;
+    if (previous.page !== page || previous.character !== a.character) {
+      setManual(false);
+      if (previous.visible && previous.lineKey)
+        void dismissDialogue(previous.lineKey);
+    }
+    presentation.current = {
+      page,
+      character: a.character,
+      lineKey: line?.key,
+      visible,
+    };
+  });
+  useEffect(
+    () => () => {
+      const shown = current.current;
+      if (shown.visible && shown.lineKey) void dismissDialogue(shown.lineKey);
+    },
+    [],
+  );
+  const [skipRevision, setSkipRevision] = useState(0);
   useEffect(() => {
-    if (!line || a.hidden || !a.mode || count < letters.length) return;
-    const t = setTimeout(() => safe(dismissDialogue(line.key)), 4500);
-    return () => clearTimeout(t);
-  }, [line?.key, count, letters.length, a.hidden, a.mode]);
+    if (!active) return;
+    return dialoguePlayback(
+      letters.length,
+      progress.current.key === key ? progress.current.count : 0,
+      motion,
+      (n) => {
+        progress.current = { key, count: n };
+        setPlayback({ key, count: n });
+      },
+      () => closeRef.current(),
+    );
+  }, [active, key, letters.length, motion, skipRevision]);
+  const skip = () => {
+    menuSound("select", a.muted);
+    if (count < letters.length) {
+      progress.current = { key, count: letters.length };
+      setPlayback({ key, count: letters.length });
+      // Restart this line's playback owner with its completed progress.
+      setSkipRevision((n) => n + 1);
+    } else close();
+  };
   if (!a.mode) return null;
-  if (a.hidden)
-    return (
+  if (!visible)
+    return dashboard || a.hidden ? (
       <button
         className="summon-companion"
         onClick={() => {
-          safe(updateFantasy({ hidden: false }));
+          progress.current = { key: "", count: 0 };
+          setPlayback({ key: "", count: 0 });
+          setBlocked("");
+          setManual(true);
+          if (a.hidden) safe(updateFantasy({ hidden: false }));
           safe(syncCompanion({ kind: "interaction" }));
         }}
       >
         ✦ เรียก{a.character === "yui" ? "ยูอิ" : "โมโมะ"}
       </button>
-    );
-  if (!dashboard && !line) return null;
-  return (
-    <aside
-      className="companion-widget"
-      aria-label="ผู้ช่วยส่วนตัว"
-      data-event={line?.event || "idle"}
-      data-expression={
-        companionPerformance(expressionEmotion, a.character).expression
-      }
-      data-pose={companionPerformance(expressionEmotion, a.character).pose}
-      data-motion={motion ? "on" : "off"}
-    >
-      <button
-        className="companion-hide"
-        aria-label="ซ่อนผู้ช่วย"
-        onClick={() => safe(updateFantasy({ hidden: true }))}
+    ) : null;
+  return createPortal(
+    <div className="companion-dialogue-layer">
+      <aside
+        className="companion-widget"
+        aria-label="ผู้ช่วยส่วนตัว"
+        data-event={line?.event || "interaction"}
+        data-expression={
+          companionPerformance(expressionEmotion, a.character).expression
+        }
+        data-pose={companionPerformance(expressionEmotion, a.character).pose}
+        data-speaking={active && count < letters.length}
+        data-motion={motion && active ? "on" : "off"}
       >
-        ×
-      </button>
-      <Companion
-        appearance={a}
-        emotion={expressionEmotion}
-        talking={motion && count < letters.length}
-        mouthFrame={count % 3}
-        size={110}
-      />
-      <button
-        className="dialogue-bubble"
-        onClick={() => {
-          menuSound("select", a.muted);
-          if (line && count < letters.length) setCount(letters.length);
-          else if (line) safe(dismissDialogue(line.key));
-          else safe(syncCompanion({ kind: "interaction" }));
-        }}
-      >
-        <b>{a.character === "yui" ? "ยูอิ" : "โมโมะ"} ✦</b>
-        <span aria-hidden="true">
-          {problem
-            ? "บทพูดยังไม่พร้อม แตะเพื่อลองใหม่"
-            : line
-              ? letters.slice(0, count).join("")
-              : idleText}
-          <i>▾</i>
-        </span>
-        <span className="sr-only" aria-live="polite">
-          {line?.text || idleText}
-        </span>
-      </button>
-    </aside>
+        <Companion
+          appearance={a}
+          emotion={expressionEmotion}
+          talking={motion && active && count < letters.length}
+          mouthFrame={count % 3}
+          size={136}
+        />
+        <button
+          className="dialogue-bubble"
+          onClick={skip}
+          aria-label="อ่านบทพูด หรือข้ามข้อความ"
+        >
+          <b className="dialogue-nameplate">
+            {a.character === "yui" ? "ยูอิ" : "โมโมะ"} ✦
+          </b>
+          <span aria-hidden="true">
+            {problem
+              ? "บทพูดยังไม่พร้อม แตะเพื่อลองใหม่"
+              : letters.slice(0, count).join("")}
+            <i>▾</i>
+          </span>
+          <span className="sr-only" aria-live="polite">
+            {text}
+          </span>
+        </button>
+        <button
+          className="companion-hide"
+          aria-label="ปิดบทสนทนา"
+          onClick={() => {
+            menuSound("back", a.muted);
+            close();
+          }}
+        >
+          ×
+        </button>
+      </aside>
+    </div>,
+    overlayHost(),
   );
 }

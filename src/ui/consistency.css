@@ -1,7 +1,210 @@
-.period-manager-trigger{border:1px solid var(--line,#d9cce7);border-radius:20px;padding:8px 16px;background:var(--surface,#fffaf1);color:inherit;font:inherit;text-align:left;max-width:100%}
-.period-manager-overlay{position:fixed;inset:0;z-index:400;display:grid;place-items:center;padding:16px;animation:modal-in .24s ease-out}
-.period-manager{width:min(540px,100%);max-height:80dvh;overflow:auto;border:1px solid #cdb980;border-radius:22px;padding:20px;background:var(--surface,#fffcf5);box-shadow:0 16px 50px #39274825;color:var(--text,#392847)}
-.period-manager header{display:flex;justify-content:space-between;align-items:center}.period-manager header h2{font-size:21px;margin:0 0 16px}.period-manager header button{font-size:28px;border:0;background:none;color:inherit}
-.period-manager-list{display:grid;gap:10px;margin-bottom:16px}.period-manager-list article{display:flex;border:1px solid #d8cae4;border-radius:15px;background:var(--bg,#faf6ff);overflow:hidden}.period-manager-list article[data-selected=true]{border:2px solid var(--accent,#ab89c8);box-shadow:0 0 0 2px #d3b96735}.period-manager-list button{background:none;border:0;color:inherit;padding:13px;text-align:left;font:inherit}.period-manager-list button:first-child{flex:1;min-width:0}.period-manager-list b,.period-manager-list small{display:block;overflow-wrap:anywhere}.period-manager-list small{margin-top:6px;font-size:13px}.period-manager-list button+button{font-size:13px;flex-shrink:0}.period-manager-overlay.motion-leaving{animation:modal-out .24s ease-in forwards}
-html[data-app-visible=false] *{animation-play-state:paused!important}
-@media(prefers-reduced-motion:reduce){.period-manager-overlay{animation:none!important}}
+.period-manager-trigger {
+  border: 1px solid var(--line, #d9cce7);
+  border-radius: 20px;
+  padding: 8px 16px;
+  background: var(--surface, #fffaf1);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  max-width: 100%;
+}
+.period-manager-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: modal-in 0.24s ease-out;
+}
+.period-manager {
+  width: min(540px, 100%);
+  max-height: 80dvh;
+  overflow: auto;
+  border: 1px solid #cdb980;
+  border-radius: 22px;
+  padding: 20px;
+  background: var(--surface, #fffcf5);
+  box-shadow: 0 16px 50px #39274825;
+  color: var(--text, #392847);
+}
+.period-manager header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.period-manager header h2 {
+  font-size: 21px;
+  margin: 0 0 16px;
+}
+.period-manager header button {
+  font-size: 28px;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+.period-manager-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.period-manager-list article {
+  display: flex;
+  border: 1px solid #d8cae4;
+  border-radius: 15px;
+  background: var(--bg, #faf6ff);
+  overflow: hidden;
+}
+.period-manager-list article[data-selected="true"] {
+  border: 2px solid var(--accent, #ab89c8);
+  box-shadow: 0 0 0 2px #d3b96735;
+}
+.period-manager-list button {
+  background: none;
+  border: 0;
+  color: inherit;
+  padding: 13px;
+  text-align: left;
+  font: inherit;
+}
+.period-manager-list button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.period-manager-list b,
+.period-manager-list small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.period-manager-list small {
+  margin-top: 6px;
+  font-size: 13px;
+}
+.period-manager-list button + button {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.period-manager-overlay.motion-leaving {
+  animation: modal-out 0.24s ease-in forwards;
+}
+html[data-app-visible="false"] * {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .period-manager-overlay {
+    animation: none !important;
+  }
+}
+.companion-dialogue-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px 12px 90px;
+  pointer-events: none;
+  background: none;
+}
+html body .app-shell .companion-dialogue-layer .dialogue-bubble {
+  display: block !important;
+}
+html
+  body
+  .app-shell
+  .companion-dialogue-layer
+  .dialogue-bubble
+  > span:not(.sr-only) {
+  display: block !important;
+  text-align: left !important;
+}
+html body .app-shell .companion-dialogue-layer .companion-widget {
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 0 !important;
+  width: min(660px, 100%) !important;
+  height: 190px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  pointer-events: auto;
+}
+html body .app-shell .companion-dialogue-layer .companion-widget::before,
+html body .app-shell .companion-dialogue-layer .companion-widget::after {
+  display: none !important;
+}
+html body .app-shell .companion-dialogue-layer .companion-widget > span {
+  flex: 0 0 136px !important;
+  width: 136px !important;
+  height: 190px !important;
+  overflow: hidden !important;
+  z-index: 1;
+}
+html body .app-shell .companion-dialogue-layer .dialogue-bubble {
+  position: relative !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 130px !important;
+  max-height: 174px !important;
+  overflow: visible !important;
+  margin: 0 0 5px !important;
+  padding: 29px 22px 18px !important;
+  border: 2px solid #c6a467 !important;
+  border-radius: 22px !important;
+  background: linear-gradient(135deg, #fff8e9, var(--wash, #f4ecfc)) !important;
+  box-shadow: 0 5px 18px #43284820 !important;
+  text-align: left !important;
+  color: var(--text, #44314f) !important;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+html body .app-shell .companion-dialogue-layer .dialogue-nameplate {
+  position: absolute;
+  top: -19px;
+  left: 20px;
+  min-width: 90px;
+  padding: 4px 18px;
+  border: 2px solid #c6a467;
+  border-radius: 24px;
+  background: var(--accent, #a58abb);
+  color: #fff !important;
+  text-align: center;
+  font-size: 17px !important;
+  line-height: 1.4;
+}
+html body .app-shell .companion-dialogue-layer .companion-hide {
+  position: absolute !important;
+  top: 38px !important;
+  right: -2px !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 26px !important;
+  z-index: 3 !important;
+  border: 1px solid #c6a467 !important;
+  background: var(--surface, #fffaf2) !important;
+  color: var(--text, #44314f) !important;
+}
+html body .app-shell:has(.companion-widget) .main-shell {
+  padding-bottom: 78px !important;
+}
+html body .app-shell .summon-companion {
+  z-index: 110 !important;
+}
+@media (max-width: 360px) {
+  html body .app-shell .companion-dialogue-layer .companion-widget > span {
+    flex-basis: 110px !important;
+    width: 110px !important;
+  }
+  html body .app-shell .companion-dialogue-layer .dialogue-bubble {
+    font-size: 14px !important;
+    padding: 28px 14px 14px !important;
+  }
+  .companion-dialogue-layer {
+    padding-inline: 6px;
+  }
+}

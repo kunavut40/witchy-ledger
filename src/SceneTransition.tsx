@@ -29,8 +29,13 @@ export default function SceneTransition() {
       );
     };
     window.addEventListener("witchy-gust", on);
+    const stop = () => {
+      if (document.hidden) animation?.cancel();
+    };
+    document.addEventListener("visibilitychange", stop);
     return () => {
       animation?.cancel();
+      document.removeEventListener("visibilitychange", stop);
       window.removeEventListener("witchy-gust", on);
     };
   }, []);
