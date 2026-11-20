@@ -1,4 +1,5 @@
-import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
+import SortableCategories from "./SortableCategories";
+import { useOverlay, overlayHost } from "./ui/SharedBackdrop";
 import { motionDuration, OPEN_MS } from "./motion";
 import { sceneGust } from "./SceneTransition";
 import { useEffect, useRef, useState } from "react";
@@ -29,12 +30,13 @@ export default function EntryCategories({
     exit = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     held = useRef(false),
     trigger = useRef<HTMLButtonElement>(null);
-  useOverlay(orbit,500);
+  useOverlay(orbit, 500);
   const parent = s.categories.find((c) => c.id === main);
   const children = s.categories.filter(
     (c) =>
       c.parentId === main && (!c.archived || c.id === sub) && c.kind === kind,
   );
+  children.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
   const choices = children.slice(page * 5, page * 5 + 5);
   const sound = (type = "select") => menuSound(type, readFantasy(s).muted);
   useEffect(
@@ -149,64 +151,48 @@ export default function EntryCategories({
         <small>⇄</small>
       </button>
       {expanded && (
-        <div className="entry-orbits main-orbits">
-          {s.categories
-            .filter(
-              (c) =>
-                !c.parentId &&
-                c.kind === kind &&
-                (!c.archived || c.id === main),
-            )
-            .map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                aria-label={c.name}
-                onClick={() => {
-                  sceneGust("in");
-                  change(c.id, "");
-                  setExpanded(false);
-                  sound("character");
-                }}
-              >
-                <Pixel name={categoryIcon(c)} size={58} />
-                <span>{c.name}</span>
-              </button>
-            ))}
-        </div>
+        <SortableCategories
+          items={s.categories.filter(
+            (c) =>
+              !c.parentId && c.kind === kind && (!c.archived || c.id === main),
+          )}
+          selected={main}
+          muted={readFantasy(s).muted}
+          onChoose={(c) => {
+            sceneGust("in");
+            change(c.id, "");
+            setExpanded(false);
+            sound("character");
+          }}
+        />
       )}
       <label>✧ หมวดย่อย</label>
-      <div key={main} className="entry-orbits">
-        {children.map((c) => (
-          <button
-            type="button"
-            key={c.id}
-            aria-label={c.name}
-            className={sub === c.id ? "selected" : ""}
-            onClick={() => {
-              sceneGust("in");
-              change(main, c.id);
-              sound();
-            }}
-          >
-            <Pixel name={categoryIcon(c)} size={58} />
-            <span>{c.name}</span>
-          </button>
-        ))}
-        {main && (
-          <button
-            type="button"
-            className={!sub ? "selected" : ""}
-            onClick={() => {
-              change(main, "");
-              sound();
-            }}
-          >
-            <Pixel name={categoryIcon(parent)} size={58} />
-            <span>ใช้หมวดหลัก</span>
-          </button>
-        )}
-      </div>
+      <SortableCategories
+        key={main}
+        items={children}
+        selected={sub}
+        muted={readFantasy(s).muted}
+        onChoose={(c) => {
+          sceneGust("in");
+          change(main, c.id);
+          sound();
+        }}
+        extra={
+          main && (
+            <button
+              type="button"
+              className={!sub ? "selected" : ""}
+              onClick={() => {
+                change(main, "");
+                sound();
+              }}
+            >
+              <Pixel name={categoryIcon(parent)} size={58} />
+              <span>ใช้หมวดหลัก</span>
+            </button>
+          )
+        }
+      />
       {orbit &&
         createPortal(
           <div

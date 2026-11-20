@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { overlayHost, useOverlay, useOverlayTop } from "../ui/SharedBackdrop";
+import { overlayHost, useOverlayTop } from "../ui/SharedBackdrop";
 import { dialoguePlayback } from "./dialoguePlayback";
 import { companionPerformance } from "./performance";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -86,7 +86,7 @@ export default function CompanionWidget({
   const visible =
     !!a.mode && !a.hidden && blocked !== key && (!!line || manual);
   const top = useOverlayTop();
-  useOverlay(visible, 200);
+
   const active = visible && foreground && top.level <= 200;
   const letters = useMemo(() => Array.from(text), [text]);
   const count = playback.key === key ? playback.count : 0;
@@ -156,23 +156,21 @@ export default function CompanionWidget({
       setSkipRevision((n) => n + 1);
     } else close();
   };
+  useEffect(() => {
+    const summon = () => {
+      progress.current = { key: "", count: 0 };
+      setPlayback({ key: "", count: 0 });
+      setBlocked("");
+      setManual(true);
+      if (a.hidden) safe(updateFantasy({ hidden: false }));
+      if (!a.mode) safe(updateFantasy({ mode: true }));
+      safe(syncCompanion({ kind: "interaction" }));
+    };
+    window.addEventListener("witchy-summon-companion", summon);
+    return () => window.removeEventListener("witchy-summon-companion", summon);
+  }, [a.hidden, a.mode, a.character]);
   if (!a.mode) return null;
-  if (!visible)
-    return dashboard || a.hidden ? (
-      <button
-        className="summon-companion"
-        onClick={() => {
-          progress.current = { key: "", count: 0 };
-          setPlayback({ key: "", count: 0 });
-          setBlocked("");
-          setManual(true);
-          if (a.hidden) safe(updateFantasy({ hidden: false }));
-          safe(syncCompanion({ kind: "interaction" }));
-        }}
-      >
-        ✦ เรียก{a.character === "yui" ? "ยูอิ" : "โมโมะ"}
-      </button>
-    ) : null;
+  if (!visible) return null;
   return createPortal(
     <div className="companion-dialogue-layer">
       <aside

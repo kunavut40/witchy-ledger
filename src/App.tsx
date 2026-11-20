@@ -1,3 +1,5 @@
+import ActiveMotion from "./ui/ActiveMotion";
+import PeriodNamePicker from "./PeriodNamePicker";
 import PeriodManager from "./PeriodManager";
 import SharedBackdrop,{useOverlay} from "./ui/SharedBackdrop";
 import InteractionController from "./ui/InteractionController";
@@ -591,14 +593,16 @@ export default function App() {
             <div className="local-label">
               <ShieldCheck size={15} /> ข้อมูลอยู่ในเครื่องของคุณ
             </div>
-            <small>Witchy Ledger · v0.6.12-local-test</small>
+            <small>Witchy Ledger · v0.6.13-local-test</small>
           </div>
         </aside>
         <div className="main-shell">
           <header className="topbar">
+<button className="companion-logo-summon" aria-label="เรียกผู้ช่วย" onClick={()=>window.dispatchEvent(new Event("witchy-summon-companion"))}><img src="/yui-icon.png" alt=""/></button>
             <button
               className="mobile-brand"
-              onClick={() => setPage("dashboard")}
+              aria-label="เรียกผู้ช่วยจากโลโก้"
+              onClick={() => window.dispatchEvent(new Event("witchy-summon-companion"))}
             >
               <img src="/yui-icon.png" alt="" />
               <span>
@@ -1707,7 +1711,7 @@ export default function App() {
         </div>
         <SceneTransition />
         <SharedBackdrop/><div id="overlay-host"/>
-        <InteractionController enabled={fantasy.animations !== false}/>
+        <InteractionController enabled={fantasy.animations !== false}/><ActiveMotion enabled={fantasy.animations !== false}/>
         <nav
           className="mobile-nav refreshed-nav"
           onClickCapture={(e) => {
@@ -2165,6 +2169,7 @@ function Editor({
           end: str("end"),
           kind: str("periodKind") as Period["kind"],
         };
+        if(!p.name.trim())throw Error("กรุณาเลือกเดือนหรือระบุชื่อรอบบัญชี");
         if (p.start > p.end) throw Error("วันสิ้นสุดต้องไม่อยู่ก่อนวันเริ่ม");
         if (
           p.kind === "calendar" &&
@@ -2630,12 +2635,7 @@ function Editor({
             <>
               <label>
                 ชื่อรอบบัญชี
-                <input
-                  name="name"
-                  required
-                  defaultValue={modal.value?.name}
-                  placeholder="เงินเดือนกุมภาพันธ์ 2570"
-                />
+<PeriodNamePicker initial={modal.value?.name}/>
               </label>
               <label>
                 รูปแบบ

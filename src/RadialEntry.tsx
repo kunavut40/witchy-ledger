@@ -1,4 +1,4 @@
-import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
+import { useOverlay, overlayHost } from "./ui/SharedBackdrop";
 import { useExitMotion } from "./motion";
 import { useEffect, useRef, useState } from "react";
 import type { State } from "./domain";
@@ -332,87 +332,90 @@ export default function RadialEntry({
                 ))}
             </select>
           </label>
-          {(["income", "expense"] as const).map((k) => (
-            <div key={k}>
-              <h4>{k === "income" ? "รายรับ" : "รายจ่าย"}</h4>
-              {prefs[k].map((item, i) => {
-                const c = s.categories.find((c) => c.id === item.id);
-                return (
-                  <div className="quick-setting-block" key={i}>
-                    <div className="quick-setting-row">
-                      <select
-                        aria-label={k + " หมวด " + (i + 1)}
-                        value={item.id}
-                        onChange={(e) =>
-                          setPrefs({
-                            ...prefs,
-                            [k]: prefs[k].map((v, j) =>
-                              i === j ? { ...v, id: e.target.value } : v,
-                            ),
-                          })
-                        }
-                      >
-                        <option value="">เลือกหมวด</option>
-                        {s.categories
-                          .filter((c) => !c.archived && c.kind === k)
-                          .map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
+          {!selected &&
+            (["income", "expense"] as const).map((k) => (
+              <div key={k}>
+                <h4>{k === "income" ? "รายรับ" : "รายจ่าย"}</h4>
+                {prefs[k].map((item, i) => {
+                  const c = s.categories.find((c) => c.id === item.id);
+                  return (
+                    <div className="quick-setting-block" key={i}>
+                      <div className="quick-setting-row">
+                        <select
+                          aria-label={k + " หมวด " + (i + 1)}
+                          value={item.id}
+                          onChange={(e) =>
+                            setPrefs({
+                              ...prefs,
+                              [k]: prefs[k].map((v, j) =>
+                                i === j ? { ...v, id: e.target.value } : v,
+                              ),
+                            })
+                          }
+                        >
+                          <option value="">เลือกหมวด</option>
+                          {s.categories
+                            .filter((c) => !c.archived && c.kind === k)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                        </select>
+                        {k === "expense" &&
+                          i < 2 &&
+                          [0, 1].map((n) => (
+                            <input
+                              key={n}
+                              aria-label={
+                                "ราคา " + (n + 1) + " หมวด " + (i + 1)
+                              }
+                              type="number"
+                              min="1"
+                              max="1000000"
+                              step="1"
+                              value={item.prices[n] ?? ""}
+                              onChange={(e) => {
+                                const prices = [...item.prices];
+                                prices[n] = Number(e.target.value);
+                                setPrefs({
+                                  ...prefs,
+                                  [k]: prefs[k].map((v, j) =>
+                                    i === j ? { ...v, prices } : v,
+                                  ),
+                                });
+                              }}
+                            />
+                          ))}
+                      </div>
+                      <label className="quick-icon-choice">
+                        <Pixel
+                          name={iconEdits[item.id] || categoryIcon(c)}
+                          size={32}
+                        />
+                        <select
+                          aria-label={"ไอคอน " + (c?.name || i)}
+                          value={iconEdits[item.id] || categoryIcon(c)}
+                          onChange={(e) =>
+                            setIconEdits({
+                              ...iconEdits,
+                              [item.id]: e.target.value,
+                            })
+                          }
+                        >
+                          {icons.map((icon) => (
+                            <option key={icon} value={icon}>
+                              {iconLabels[icon] || icon}
                             </option>
                           ))}
-                      </select>
-                      {k === "expense" &&
-                        i < 2 &&
-                        [0, 1].map((n) => (
-                          <input
-                            key={n}
-                            aria-label={"ราคา " + (n + 1) + " หมวด " + (i + 1)}
-                            type="number"
-                            min="1"
-                            max="1000000"
-                            step="1"
-                            value={item.prices[n] ?? ""}
-                            onChange={(e) => {
-                              const prices = [...item.prices];
-                              prices[n] = Number(e.target.value);
-                              setPrefs({
-                                ...prefs,
-                                [k]: prefs[k].map((v, j) =>
-                                  i === j ? { ...v, prices } : v,
-                                ),
-                              });
-                            }}
-                          />
-                        ))}
+                        </select>
+                      </label>
+                      {i === 2 && <small>อื่น ๆ เปิดหน้ากรอกจำนวนเงินเอง</small>}
                     </div>
-                    <label className="quick-icon-choice">
-                      <Pixel
-                        name={iconEdits[item.id] || categoryIcon(c)}
-                        size={32}
-                      />
-                      <select
-                        aria-label={"ไอคอน " + (c?.name || i)}
-                        value={iconEdits[item.id] || categoryIcon(c)}
-                        onChange={(e) =>
-                          setIconEdits({
-                            ...iconEdits,
-                            [item.id]: e.target.value,
-                          })
-                        }
-                      >
-                        {icons.map((icon) => (
-                          <option key={icon} value={icon}>
-                            {iconLabels[icon] || icon}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {i === 2 && <small>อื่น ๆ เปิดหน้ากรอกจำนวนเงินเอง</small>}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                  );
+                })}
+              </div>
+            ))}
           <button className="primary" onClick={save}>
             บันทึกตั้งค่า
           </button>
@@ -546,25 +549,26 @@ export default function RadialEntry({
               </i>
             </button>
           )}
-          {(["income", "expense"] as const).map((k) => (
-            <button
-              key={k}
-              className={
-                "radial-orb type-orb kind-" +
-                k +
-                (kind === k ? " active" : "") +
-                (kind ? " type-small" : " spinning-ring")
-              }
-              onPointerDown={(e) => begin(e, () => select(k), k)}
-              onClick={() => tap(() => select(k))}
-            >
-              <Pixel
-                name={k === "income" ? "ui-income" : "ui-expense"}
-                size={60}
-              />
-              <span>{k === "income" ? "รายรับ" : "รายจ่าย"}</span>
-            </button>
-          ))}
+          {!selected &&
+            (["income", "expense"] as const).map((k) => (
+              <button
+                key={k}
+                className={
+                  "radial-orb type-orb kind-" +
+                  k +
+                  (kind === k ? " active" : "") +
+                  (kind ? " type-small" : " spinning-ring")
+                }
+                onPointerDown={(e) => begin(e, () => select(k), k)}
+                onClick={() => tap(() => select(k))}
+              >
+                <Pixel
+                  name={k === "income" ? "ui-income" : "ui-expense"}
+                  size={60}
+                />
+                <span>{k === "income" ? "รายรับ" : "รายจ่าย"}</span>
+              </button>
+            ))}
           <p className="radial-account">
             {selected ? "ชำระจาก " : "บัญชี "}
             {s.accounts.find((a) => a.id === prefs.account)?.name ||

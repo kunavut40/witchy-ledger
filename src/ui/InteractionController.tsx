@@ -20,6 +20,9 @@ export default function InteractionController({
     const stop = (id: number) => {
       const p = pressed.get(id);
       if (!p) return;
+      p.element
+        .closest("button,a,[role=button],label")
+        ?.removeAttribute("data-held-visual");
       clearTimeout(p.timer);
       pressed.delete(id);
       const animation = active.get(p.element);
@@ -60,7 +63,10 @@ export default function InteractionController({
       stop(event.pointerId);
       const element = button.querySelector(".pixel-art-icon,svg") || button;
       animate(element);
-      const timer = setTimeout(() => animate(element, true), 350);
+      const timer = setTimeout(() => {
+        button.setAttribute("data-held-visual", "true");
+        animate(element, true);
+      }, 350);
       pressed.set(event.pointerId, { element, timer });
     };
     const up = (event: PointerEvent) => stop(event.pointerId);

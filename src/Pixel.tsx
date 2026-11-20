@@ -321,6 +321,7 @@ export default function Pixel({
   const p = paths[name] || paths.potion;
   return (
     <svg
+      className="pixel-vector-icon"
       aria-hidden="true"
       width={size}
       height={size}

@@ -1,0 +1,405 @@
+/* Month cards follow the app palette; dates stay visible even on compact phones. */
+.period-selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.selected-period-range {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+  white-space: normal;
+}
+.period-bar > .period-dates {
+  display: none !important;
+}
+.month-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-block: 14px;
+}
+.month-preset-grid > button,
+.month-tile {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, #bca467);
+  border-radius: 13px;
+  background: linear-gradient(135deg, #fffcf5, var(--wash));
+  color: var(--text);
+  box-shadow: 0 3px 8px #523b6410;
+  animation: month-arrive 0.22s ease-out both;
+}
+.month-preset-grid > button {
+  min-height: 65px;
+  font: inherit;
+  font-size: 14px;
+}
+.month-tile {
+  position: relative;
+  overflow: visible;
+}
+.month-tile > button:first-child {
+  display: block;
+  width: 100%;
+  padding: 14px 4px 19px;
+  background: none;
+  border: 0;
+  color: inherit;
+  min-height: 104px;
+  font: inherit;
+}
+.month-tile b {
+  font-size: 14px;
+}
+.month-tile small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 5px;
+}
+.month-tile[data-selected="true"],
+.month-preset-grid > button[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  background: var(--wash);
+}
+.month-tile .month-edit {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  width: 28px;
+  height: 27px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 17px;
+  color: var(--accent);
+}
+.month-year {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+.month-year button {
+  background: var(--wash);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  font-size: 25px;
+  width: 36px;
+}
+.month-help,
+.sort-help {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.manual-period-name,
+.period-name-picker > button {
+  border: 1px solid var(--accent);
+  border-radius: 13px;
+  background: var(--wash);
+  color: var(--text);
+  padding: 12px;
+  font: inherit;
+  width: 100%;
+}
+.period-name-picker > input:not([type="hidden"]) {
+  margin-top: 9px;
+}
+.month-name-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 550;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: transparent;
+}
+.period-manager {
+  background: linear-gradient(135deg, #fffdf7, var(--wash));
+}
+.period-manager details {
+  margin: 14px 0;
+}
+.sortable-categories button {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sortable-categories button.sorting {
+  z-index: 3;
+  outline: 3px solid var(--accent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+  scale: 1.06;
+}
+/* JRPG portrait: foreground bust and an adjoining paper frame, with no scrim. */
+html body .app-shell .companion-dialogue-layer {
+  padding: 18px 10px 90px;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+html body .app-shell .companion-dialogue-layer .companion-widget {
+  width: min(720px, 100%) !important;
+  height: 195px !important;
+  align-items: flex-end !important;
+  pointer-events: none;
+}
+html body .app-shell .companion-dialogue-layer .companion-widget > span {
+  flex: 0 0 150px !important;
+  width: 150px !important;
+  height: 195px !important;
+  pointer-events: none;
+}
+html
+  body
+  .app-shell
+  .companion-dialogue-layer
+  .character-art.modular-character {
+  width: 150px !important;
+  height: 195px !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+html body .app-shell .companion-dialogue-layer .rig-stage {
+  width: 235% !important;
+  left: -67.5% !important;
+  top: 0 !important;
+  aspect-ratio: 1;
+  height: auto !important;
+}
+html body .app-shell .companion-dialogue-layer .dialogue-bubble {
+  min-height: 113px !important;
+  max-height: 166px !important;
+  margin-left: -6px !important;
+  padding: 24px 14px 14px !important;
+  border-color: #c4a16a !important;
+  box-shadow:
+    inset 0 0 0 2px #fff4df,
+    0 4px 12px #49314b22 !important;
+  pointer-events: auto;
+  font-size: 14px !important;
+}
+html body .app-shell .companion-dialogue-layer .dialogue-nameplate {
+  left: 15px;
+  min-width: 84px;
+  top: -18px;
+  background: linear-gradient(#76527e, #4b315a);
+  border-color: #d7b873;
+  font-size: 16px !important;
+}
+html body .app-shell .companion-dialogue-layer .companion-hide {
+  top: auto !important;
+  bottom: 117px !important;
+  right: 0 !important;
+  pointer-events: auto;
+}
+.companion-logo-summon {
+  order: 3;
+  flex: 0 0 37px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--wash);
+  padding: 0;
+  width: 37px;
+  height: 37px;
+}
+.companion-logo-summon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 11px;
+}
+.topbar .mobile-brand {
+  order: 1;
+}
+.topbar .top-actions {
+  order: 2;
+}
+/* Only visible icons in the active surface move. The controller clears these markers. */
+html
+  body
+  .app-shell[data-active-surface="page"][data-page="dashboard"]
+  .grand-spark {
+  animation: grand-glimmer 4s ease-in-out infinite !important;
+}
+html body .app-shell .rank-sprite[data-live-icon="true"] .rank-rim-light {
+  animation: rank-aura-breathe 3s ease-in-out infinite !important;
+}
+html body .app-shell .rank-sprite[data-live-icon="true"] .rank-sparkles i {
+  animation: rank-twinkle 3s ease-in-out infinite !important;
+}
+html body .app-shell .pixel-vector-icon[data-live-icon="true"] .item-glint {
+  animation: hero-glow 3s ease-in-out infinite !important;
+}
+html body .app-shell .spinning-ring[data-live-icon="true"]::after,
+html body .app-shell .spinning-ring[data-live-icon="true"] > .orb-sparkle {
+  animation: finance-ring-turn 4.5s linear infinite !important;
+}
+html body .app-shell .pixel-art-icon[data-live-icon="true"] {
+  animation: active-icon-breathe 2.8s ease-in-out infinite !important;
+}
+html body .app-shell .rank-sprite[data-live-icon="true"] .rank-artwork {
+  animation: rank-lustre 4s ease-in-out infinite !important;
+}
+html body .app-shell button:has(> .interaction-stars) {
+  position: relative;
+  overflow: visible !important;
+  isolation: isolate;
+}
+.interaction-stars {
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  z-index: 4;
+  border-radius: inherit;
+}
+.interaction-stars:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  filter: drop-shadow(0 0 4px var(--accent));
+  animation: star-orbit 0.9s linear infinite;
+}
+.interaction-stars i {
+  position: absolute;
+  left: calc(50% + cos(var(--star-i) * 45deg) * 48%);
+  top: calc(50% + sin(var(--star-i) * 45deg) * 48%);
+  font-style: normal;
+  font-size: 12px;
+  color: var(--accent);
+  text-shadow: 0 0 5px currentColor;
+  animation: star-breathe 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--star-i) * -0.15s);
+}
+.interaction-stars i:nth-child(2n) {
+  color: color-mix(in srgb, var(--accent) 45%, #dfb255);
+}
+.interaction-stars i:nth-child(3n) {
+  color: color-mix(in srgb, var(--accent) 45%, #e8a9c9);
+}
+@keyframes active-icon-breathe {
+  50% {
+    transform: translateY(-2px) rotate(2deg);
+    filter: drop-shadow(
+      0 1px 3px color-mix(in srgb, var(--accent) 40%, transparent)
+    );
+  }
+}
+@keyframes star-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes star-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.65) rotate(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(90deg);
+  }
+}
+@keyframes month-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 700px) {
+  .period-bar > div {
+    width: 100% !important;
+  }
+  .period-bar .period-selection-summary {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+  .period-bar .period-manager-trigger {
+    font-size: 13px;
+    flex: 0 0 auto;
+    padding: 8px 10px;
+  }
+  .selected-period-range {
+    font-size: 10px;
+  }
+  .topbar {
+    gap: 5px !important;
+  }
+  .topbar .mobile-brand {
+    min-width: 0 !important;
+    gap: 5px !important;
+  }
+  .topbar .mobile-brand img {
+    width: 32px !important;
+    height: 36px !important;
+  }
+  .topbar .mobile-brand span {
+    font-size: 12px !important;
+  }
+  .topbar .profile-nickname {
+    font-size: 11px !important;
+  }
+  .topbar .top-actions {
+    min-width: 0;
+    gap: 4px;
+  }
+  .topbar .profile-button {
+    gap: 3px !important;
+  }
+  .companion-logo-summon {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}
+@media (max-width: 360px) {
+  html body .app-shell .companion-dialogue-layer .companion-widget > span,
+  html
+    body
+    .app-shell
+    .companion-dialogue-layer
+    .character-art.modular-character {
+    width: 118px !important;
+    flex-basis: 118px !important;
+  }
+  html body .app-shell .companion-dialogue-layer .dialogue-bubble {
+    font-size: 13px !important;
+    padding-inline: 11px !important;
+  }
+  .month-tile b {
+    font-size: 12px;
+  }
+  .month-tile small {
+    font-size: 9px;
+  }
+  .month-preset-grid {
+    gap: 7px;
+  }
+  .topbar .mobile-brand img {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html body .app-shell .pixel-art-icon[data-live-icon="true"],
+  html body .app-shell .rank-sprite[data-live-icon="true"] .rank-artwork,
+  .interaction-stars:before,
+  .interaction-stars i,
+  .month-tile,
+  .month-preset-grid > button {
+    animation: none !important;
+  }
+}
