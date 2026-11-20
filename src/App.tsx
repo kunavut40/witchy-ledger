@@ -1,3 +1,4 @@
+import PeriodManager from "./PeriodManager";
 import SharedBackdrop,{useOverlay} from "./ui/SharedBackdrop";
 import InteractionController from "./ui/InteractionController";
 import GrandFantasyScene from "./fantasy/GrandFantasyScene";
@@ -692,20 +693,7 @@ export default function App() {
                   </span>
                   <div>
                     <small>รอบบัญชีที่เลือก</small>
-                    <select
-                      aria-label="เลือกรอบบัญชี"
-                      value={p.id}
-                      onChange={(e) => setPeriodId(e.target.value)}
-                    >
-                      {s.periods
-                        .slice()
-                        .sort((a, b) => b.start.localeCompare(a.start))
-                        .map((x) => (
-                          <option key={x.id} value={x.id}>
-                            {x.name}
-                          </option>
-                        ))}
-                    </select>
+<PeriodManager periods={s.periods} selected={p} select={setPeriodId} edit={value=>setModal({type:"period",value})} add={()=>setModal({type:"period"})} muted={fantasy.muted}/>
                   </div>
                 </div>
                 <span className="period-dates">

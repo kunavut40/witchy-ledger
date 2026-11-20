@@ -28,3 +28,5 @@ createRoot(document.getElementById("root")!).render(
 import "./ui/interaction.css";
 
 import "./ui/overlays.css";
+
+import "./ui/consistency.css";
