@@ -1,3 +1,7 @@
+## ล่าสุด 0.6.13-local-test — Month presets / sortable categories / active motion
+
+อ่าน RELEASE-0.6.13.md ก่อน Branch feature/month-presets-companion-v0613, implementation 5ea5db7. เดือน12ช่อง3x4, แตะเลือก/ค้างแก้ช่วงวัน, ชื่อเดือนหรือระบุเอง, แสดงวันเริ่ม–สิ้นสุดบนมือถือ; หมวดหลัก/ย่อยลากเรียงและpersist order; ลบวงรายจ่ายซ้ำหน้าprice; ผู้ช่วยเรียกจากโลโก้บนขวา ไม่blurฉาก; animationเฉพาะforeground/ไอคอนที่เห็น พร้อมดาวขณะเลือก/ค้าง เปลี่ยนนโยบายstatic-onlyของ0.6.12ตามผู้ใช้ Tests83ผ่าน APK offline code19/certเดิม ตรวจ41assetsตรงdist ยังไม่ทดสอบติดตั้ง/hold-dragบนS25จริง ไม่pushGitHub
+
 ## ล่าสุด 0.6.12-local-test — Performance / calendar / dialogue
 
 อ่าน docs/PERFORMANCE-FANTASY-UI-UPDATE.md ก่อนทำต่อ branch feature/performance-fantasy-ui, implementation commit a180e67; ไอคอนนิ่งตอนว่าง ใช้ shared backdrop/calendar, period manager, บทพูดครึ่งตัวและปิดหลังข้อความครบ 1250ms Tests79ผ่าน APK Offline versionCode18/certเดิม ตรวจไฟล์เว็บ41รายการตรงกับdistแล้ว Browser393/320/412/desktop,6สี,Classic/Fantasy,offline cacheตรวจแล้ว ยังไม่ทดสอบS25จริงหรือวัดFPS ไม่ push/merge/release ตามคำสั่งงานนี้ สำรองซอร์สก่อนแก้ไว้แยก ไม่ใช่สำรองฐานข้อมูล
@@ -62,4 +66,5 @@ Added four theme-colored leaves and three thin wind streaks, retained preset/man
 ## Follow-up — APK packaged for phone testing
 
 Built `WitchyLedger-0.6.8.apk` from the current production web build. Verified APK signature, application ID/version, matching certificate with 0.6.7, and byte-matching packaged web/character assets. Uses the existing local signing key; no key or build tools are published. APK and SHA-256 checksum are included for GitHub download. Physical-phone testing remains for the user.
+
 
