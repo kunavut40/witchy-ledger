@@ -1,3 +1,4 @@
+import InteractionController from "./ui/InteractionController";
 import GrandFantasyScene from "./fantasy/GrandFantasyScene";
 import { motionDuration, OPEN_MS, useExitMotion } from "./motion";
 import SceneTransition, { sceneGust } from "./SceneTransition";
@@ -528,6 +529,7 @@ export default function App() {
         }
         data-eye={fantasy.eyeColor || "pink"}
         data-fantasy={fantasy.mode ? "on" : "off"}
+        data-ui-motion={fantasy.animations === false ? "off" : "on"}
         onClickCapture={(e) => {
           const target = (e.target as HTMLElement).closest(
             "button,select,input[type=radio],input[type=checkbox]",
@@ -1714,6 +1716,7 @@ export default function App() {
           </main>
         </div>
         <SceneTransition />
+        <InteractionController enabled={fantasy.animations !== false}/>
         <nav
           className="mobile-nav refreshed-nav"
           onClickCapture={(e) => {

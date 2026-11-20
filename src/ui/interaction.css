@@ -1,0 +1,8 @@
+/* Icons are static at rest. InteractionController owns short compositor motion. */
+html body .app-shell :is(.pixel-art-icon,.rank-frame,.rank-ornament,.type-orb,.radial-orb,.grand-spark,.modular-character,.rig-stage,.rig-head,.rig-head-group,.rig-body,.rig-blink,.rig-emotion-mark),
+html body .app-shell :is(.pixel-art-icon,.rank-frame,.rank-ornament,.type-orb,.radial-orb)::before,
+html body .app-shell :is(.pixel-art-icon,.rank-frame,.rank-ornament,.type-orb,.radial-orb)::after{animation:none!important}
+html body .app-shell *{will-change:auto!important}
+html body .app-shell .companion-widget[data-speaking=true][data-motion=on] .rig-head-group{animation:rig-nod .5s steps(3,end) alternate infinite!important}
+html body .app-shell[data-ui-motion=off] *,html body .app-shell[data-ui-motion=off] *::before,html body .app-shell[data-ui-motion=off] *::after{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){html body .app-shell .companion-widget[data-speaking=true] *{animation:none!important}}
