@@ -53,4 +53,8 @@ Keep current work intact; inspect the base safely in a separate worktree:
 git worktree add -b restore/pre-v0613 ../witchy-ledger-before-v0613 2babff7d7bac089477d82e6c7ce59a209af3cf9f
 ```
 
-Use Git log for implementation and documentation commit hashes on `feature/month-presets-companion-v0613`. No push, merge or GitHub release was performed. The source and signed test APK are local.
+Use Git log for implementation and documentation commit hashes on `feature/month-presets-companion-v0613`.
+
+After local verification, the user authorized GitHub publication on 20 November 2026. Publication uses a fast-forward update of `main`, retaining this feature branch and the previous history, plus the test APK in pre-release `v0.6.13-local-test`. Earlier no-push statements in historical reports describe the state before this authorization.
+
+Release: https://github.com/kunavut40/witchy-ledger/releases/tag/v0.6.13-local-test

@@ -1,3 +1,7 @@
+## GitHub continuation — 0.6.13-local-test
+
+ผู้ใช้อนุญาตให้อัปโหลดวันที่ 20 พฤศจิกายน 2569 ใช้ main สำหรับทำต่อที่บ้าน และ Pre-release v0.6.13-local-test สำหรับ APK อ่าน RELEASE-0.6.13.md ก่อน ข้อความไม่ push ในบันทึกด้านล่างเป็นประวัติก่อนอนุญาตครั้งนี้
+
 ## ล่าสุด 0.6.13-local-test — Month presets / sortable categories / active motion
 
 อ่าน RELEASE-0.6.13.md ก่อน Branch feature/month-presets-companion-v0613, implementation 5ea5db7. เดือน12ช่อง3x4, แตะเลือก/ค้างแก้ช่วงวัน, ชื่อเดือนหรือระบุเอง, แสดงวันเริ่ม–สิ้นสุดบนมือถือ; หมวดหลัก/ย่อยลากเรียงและpersist order; ลบวงรายจ่ายซ้ำหน้าprice; ผู้ช่วยเรียกจากโลโก้บนขวา ไม่blurฉาก; animationเฉพาะforeground/ไอคอนที่เห็น พร้อมดาวขณะเลือก/ค้าง เปลี่ยนนโยบายstatic-onlyของ0.6.12ตามผู้ใช้ Tests83ผ่าน APK offline code19/certเดิม ตรวจ41assetsตรงdist ยังไม่ทดสอบติดตั้ง/hold-dragบนS25จริง ไม่pushGitHub
@@ -75,5 +79,6 @@ Android source อยู่ android/ ไม่ใช่ Gradle project: build-ap
 Git เก็บ source/assets/tests ไม่ได้เก็บ IndexedDB ของผู้ใช้ ข้อมูลการเงินต้อง backup JSON ผ่านแอปเองก่อนย้ายเครื่อง APK กับเบราว์เซอร์มีข้อมูลแยกกัน ห้ามเพิ่มไฟล์ JSON การเงินจริงหรือ signing keystore เข้า repo
 
 ก่อนลงมือรอบต่อไป ตรวจ git status และสร้างจุดย้อนกลับ รักษางานที่ยังไม่ commit ห้าม reset/clean ห้ามเปลี่ยนสูตรการเงินหรือ progression โดยไม่ได้รับอนุญาต
+
 
 
