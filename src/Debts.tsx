@@ -1,3 +1,4 @@
+import MagicDatePicker from "./MagicDatePicker";
 import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useExitMotion } from "./motion";
 import { readFantasy } from "./fantasy/Fantasy";
@@ -398,13 +399,7 @@ function DebtEditor({
               </div>
               <label>
                 วันที่ชำระ
-                <input
-                  required
-                  type="date"
-                  max={today()}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
+                <MagicDatePicker label="วันที่ชำระ" initial={date} value={date} onChange={setDate} max={today()} s={s}/>
               </label>
               <label>
                 จำนวนที่ชำระ (บาท)

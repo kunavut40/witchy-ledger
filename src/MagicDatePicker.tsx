@@ -1,3 +1,5 @@
+import {useExitMotion} from "./motion";
+import {isSelectableDate} from "./calendarBounds";
 import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -40,19 +42,22 @@ export default function MagicDatePicker({
   name = "date",
   initial,
   s,
+  value:controlled,onChange,min,max,label,allowClear=false,
 }: {
   name?: string;
   initial: string;
   s: State;
+  value?:string;onChange?:(date:string)=>void;min?:string;max?:string;label?:string;allowClear?:boolean;
 }) {
-  const [value, setValue] = useState(initial),
+  const [internal, setValue] = useState(initial),
     [open, setOpen] = useState(false),
     [pick, setPick] = useState(initial);
   const [view, setView] = useState(() => ({
-    year: Number(initial.slice(0, 4)),
-    month: Number(initial.slice(5, 7)) - 1,
+    year: Number((initial||today()).slice(0, 4)),
+    month: Number((initial||today()).slice(5, 7)) - 1,
   }));
   useOverlay(open,500);
+  const value=controlled ?? internal;
   const trigger = useRef<HTMLButtonElement>(null),
     last = useRef({ date: "", time: 0 });
   const theme =
@@ -60,12 +65,11 @@ export default function MagicDatePicker({
     s.settings.find((x) => x.id === "appearance.palette")?.value ||
     "lavender";
   const sound = () => menuSound("select", readFantasy(s).muted);
-  function close() {
-    setOpen(false);
-    trigger.current?.focus();
-  }
+  const exitMotion=useExitMotion(()=>{setOpen(false);trigger.current?.focus()},readFantasy(s).muted);
+  const close=exitMotion.dismiss;
   function confirm(date: string) {
-    setValue(date);
+    if(!isSelectableDate(date,min,max))return;
+    setValue(date);onChange?.(date);
     sound();
     close();
   }
@@ -101,11 +105,12 @@ export default function MagicDatePicker({
         ref={trigger}
         type="button"
         className="magic-date-trigger"
+        aria-label={label}
         onClick={() => {
-          setPick(value);
+          setPick(value||today());
           setView({
-            year: Number(value.slice(0, 4)),
-            month: Number(value.slice(5, 7)) - 1,
+            year: Number((value||today()).slice(0, 4)),
+            month: Number((value||today()).slice(5, 7)) - 1,
           });
           last.current = { date: "", time: 0 };
           setOpen(true);
@@ -113,17 +118,17 @@ export default function MagicDatePicker({
         }}
       >
         ☾{" "}
-        {new Date(value + "T12:00").toLocaleDateString("th-TH", {
+        {value?new Date(value + "T12:00").toLocaleDateString("th-TH", {
           day: "numeric",
           month: "short",
           year: "numeric",
-        })}{" "}
+        }):"เลือกวันที่"}{" "}
         <span>✧</span>
       </button>
       {open &&
         createPortal(
           <div
-            className="magic-calendar-overlay"
+            className={"magic-calendar-overlay motion-surface "+(exitMotion.leaving?"motion-leaving":"")}
             onPointerDown={(e) => {
               if (e.target === e.currentTarget) close();
             }}
@@ -197,6 +202,7 @@ export default function MagicDatePicker({
                     <button
                       key={d}
                       type="button"
+                      disabled={!isSelectableDate(isoDay(view.year,view.month,d),min,max)}
                       aria-label={isoDay(view.year, view.month, d)}
                       aria-pressed={pick === isoDay(view.year, view.month, d)}
                       aria-current={
@@ -224,6 +230,7 @@ export default function MagicDatePicker({
               </div>
               <p className="calendar-help">แตะสองครั้งที่วันเพื่อเลือกทันที</p>
               <CalendarThemes s={s} />
+              {allowClear&&<button type="button" onClick={()=>{setValue("");onChange?.("");close()}}>ล้างวันที่</button>}
               <footer>
                 <button
                   type="button"
@@ -243,6 +250,7 @@ export default function MagicDatePicker({
                 <button
                   type="button"
                   className="primary"
+                  disabled={!isSelectableDate(pick,min,max)}
                   onClick={() => confirm(pick)}
                 >
                   เลือกวันที่

@@ -1,3 +1,4 @@
+import MagicDatePicker from "../MagicDatePicker";
 import type { State } from "../domain";
 import { db } from "../db";
 import { readFantasy, updateFantasy } from "./Fantasy";
@@ -85,16 +86,7 @@ export default function CompanionPreferences({ s }: { s: State }) {
       {get("companion.birthdayConsent") === "true" && (
         <label>
           วันเกิด (เก็บเฉพาะวันและเดือน)
-          <input
-            aria-label="วันเกิด"
-            type="date"
-            value={
-              get("companion.birthday")
-                ? "2000-" + get("companion.birthday")
-                : ""
-            }
-            onChange={(e) => put("companion.birthday", e.target.value.slice(5))}
-          />
+          <MagicDatePicker label="วันเกิด" initial="2000-01-01" value={get('companion.birthday')?'2000-'+get('companion.birthday'):''} onChange={date=>put('companion.birthday',date.slice(5))} allowClear s={s}/>
         </label>
       )}
       {s.accounts
@@ -102,16 +94,7 @@ export default function CompanionPreferences({ s }: { s: State }) {
         .map((a) => (
           <label key={a.id}>
             วันครบกำหนด {a.name} (ไม่บังคับ)
-            <input
-              type="date"
-              value={dates[a.id] || ""}
-              onChange={(e) =>
-                put(
-                  "companion.debtDueDates",
-                  JSON.stringify({ ...dates, [a.id]: e.target.value }),
-                )
-              }
-            />
+            <MagicDatePicker label={'วันครบกำหนด '+a.name} initial={dates[a.id]||''} value={dates[a.id]||''} onChange={date=>put('companion.debtDueDates',JSON.stringify({...dates,[a.id]:date}))} allowClear s={s}/>
           </label>
         ))}
     </div>

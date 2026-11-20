@@ -1,0 +1,2 @@
+import {expect,it} from 'vitest';import {isSelectableDate} from './calendarBounds';
+it('handles leap dates, month/year changes and inclusive period boundaries',()=>{expect(isSelectableDate('2028-02-29')).toBe(true);expect(isSelectableDate('2026-02-29')).toBe(false);expect(isSelectableDate('2026-12-31','2026-12-31','2027-01-31')).toBe(true);expect(isSelectableDate('2027-01-31','2026-12-31','2027-01-31')).toBe(true);expect(isSelectableDate('2027-02-01',undefined,'2027-01-31')).toBe(false);expect(isSelectableDate('')).toBe(false)});

@@ -2663,28 +2663,15 @@ function Editor({
               <div className="form-grid">
                 <label>
                   วันเริ่ม
-                  <input
-                    type="date"
-                    required
-                    name="start"
-                    defaultValue={modal.value?.start || today()}
-                    onChange={() =>
-                      setWarning("ระบบจะตรวจช่วงวันที่ซ้อนทับและเว้นว่างก่อนบันทึก")
-                    }
-                  />
+                  <MagicDatePicker name="start" label="วันเริ่มรอบ" initial={modal.value?.start||today()} s={s} onChange={()=>setWarning('ระบบจะตรวจช่วงวันที่ซ้อนทับและเว้นว่างก่อนบันทึก')}/>
                 </label>
                 <label>
                   วันสิ้นสุด
-                  <input
-                    type="date"
-                    required
-                    name="end"
-                    defaultValue={modal.value?.end || today()}
-                  />
+                  <MagicDatePicker name="end" label="วันสิ้นสุดรอบ" initial={modal.value?.end||today()} s={s}/>
                 </label>
               </div>
               <p className="info-note">
-                ช่องเลือกวันใช้รูปแบบของอุปกรณ์ รายงานแสดง พ.ศ. ภาษาไทย ภายในเก็บ ISO
+                ช่องเลือกวันใช้ปฏิทินเวทมนตร์ แสดง พ.ศ. ภาษาไทย ภายในเก็บ ISO
                 date โดยไม่เลื่อนวันตาม timezone
               </p>
               {warning && <p className="warning">{warning}</p>}
