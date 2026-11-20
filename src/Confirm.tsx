@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useSyncExternalStore } from "react";
 type Request = { message: string; resolve: (value: boolean) => void };
 let pending: Request | null = null;
@@ -18,6 +19,7 @@ export default function Confirm() {
     },
     () => pending,
   );
+  useOverlay(!!request,700);
   if (!request) return null;
   function settle(value: boolean) {
     pending = null;

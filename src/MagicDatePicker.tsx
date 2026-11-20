@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { db } from "./db";
@@ -51,6 +52,7 @@ export default function MagicDatePicker({
     year: Number(initial.slice(0, 4)),
     month: Number(initial.slice(5, 7)) - 1,
   }));
+  useOverlay(open,500);
   const trigger = useRef<HTMLButtonElement>(null),
     last = useRef({ date: "", time: 0 });
   const theme =
@@ -248,7 +250,7 @@ export default function MagicDatePicker({
               </footer>
             </section>
           </div>,
-          document.body,
+          overlayHost(),
         )}
     </>
   );

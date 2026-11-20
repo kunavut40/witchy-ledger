@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useExitMotion } from "./motion";
 import { readFantasy } from "./fantasy/Fantasy";
 import { useEffect, useState, type FormEvent } from "react";
@@ -233,6 +234,7 @@ function DebtEditor({
   close: () => void;
   act: (fn: () => Promise<unknown>, message?: string) => Promise<boolean>;
 }) {
+  useOverlay(true);
   const motion = useExitMotion(closeImmediately, readFantasy(s).muted);
   const close = motion.dismiss;
   const a = editor.account;

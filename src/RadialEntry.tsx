@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useExitMotion } from "./motion";
 import { useEffect, useRef, useState } from "react";
 import type { State } from "./domain";
@@ -73,6 +74,7 @@ export default function RadialEntry({
   ) => void;
   muted: boolean;
 }) {
+  useOverlay(true);
   const [kind, setKind] = useState<Kind | null>(null);
   const [slot, setSlot] = useState<number | null>(null);
   const [settings, setSettings] = useState(false);

@@ -1,3 +1,4 @@
+import SharedBackdrop,{useOverlay} from "./ui/SharedBackdrop";
 import InteractionController from "./ui/InteractionController";
 import GrandFantasyScene from "./fantasy/GrandFantasyScene";
 import { motionDuration, OPEN_MS, useExitMotion } from "./motion";
@@ -256,6 +257,7 @@ export default function App() {
     }
   }, [modal?.type]);
   const liveState = useLiveQuery(() => readState(), [], undefined);
+  useOverlay(moreOpen);
   const moreMotion = useExitMotion(
     () => setMoreOpen(false),
     liveState ? readFantasy(liveState).muted : true,
@@ -1716,6 +1718,7 @@ export default function App() {
           </main>
         </div>
         <SceneTransition />
+        <SharedBackdrop/><div id="overlay-host"/>
         <InteractionController enabled={fantasy.animations !== false}/>
         <nav
           className="mobile-nav refreshed-nav"
@@ -1970,6 +1973,7 @@ function Editor({
   close: () => void;
   act: (fn: () => Promise<unknown>, message?: string) => Promise<boolean>;
 }) {
+  useOverlay(true);
   const [busy, setBusy] = useState(false);
   const [editorLeaving, setEditorLeaving] = useState(false);
   const editorExit = useRef<ReturnType<typeof setTimeout> | undefined>(

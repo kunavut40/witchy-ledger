@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useExitMotion } from "./motion";
 import { readFantasy } from "./fantasy/Fantasy";
 import { useState, useEffect, useRef } from "react";
@@ -16,6 +17,7 @@ export default function DetailSheet({
   kind: DetailKind;
   close: () => void;
 }) {
+  useOverlay(true);
   const [category, setCategory] = useState("");
   const closeMotion = useExitMotion(closeImmediately, readFantasy(s).muted);
   const backMotion = useExitMotion(() => setCategory(""), readFantasy(s).muted);

@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { useExitMotion } from "./motion";
 import { testUnlocked } from "./testing";
 import { useEffect, useState, type FormEvent } from "react";
@@ -46,6 +47,7 @@ export default function Profile({
   close: () => void;
   act: (fn: () => Promise<unknown>, message?: string) => Promise<boolean>;
 }) {
+  useOverlay(true);
   const motion = useExitMotion(
     closeImmediately,
     parseFantasy(settings.find((x) => x.id === "fantasy.state")?.value).muted,

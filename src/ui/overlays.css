@@ -1,0 +1,12 @@
+:root{--overlay-dim:.5;--overlay-blur:3px}
+.shared-backdrop{position:fixed;inset:0;background:rgba(252,249,255,var(--overlay-dim));backdrop-filter:blur(var(--overlay-blur));pointer-events:none;opacity:0;visibility:hidden;transition:opacity .14s ease,visibility 0s .14s}
+.shared-backdrop[data-active=true]{opacity:1;visibility:visible;transition:opacity .14s ease}
+html body :is(.modal-overlay,.more-menu-overlay,.radial-scrim,.magic-calendar-overlay,.category-orbit-overlay,.period-manager-overlay,.companion-dialogue-layer){background:transparent!important;backdrop-filter:none!important}
+html body :is(.modal-overlay,.more-menu-overlay,.radial-scrim,.magic-calendar-overlay,.category-orbit-overlay)::before{background:transparent!important;backdrop-filter:none!important}
+html body .modal-overlay,html body .more-menu-overlay,html body .radial-scrim{z-index:300}
+html body .magic-calendar-overlay,html body .category-orbit-overlay{z-index:500}
+html body .confirmation{z-index:700}
+html body .refreshed-nav{z-index:100!important}
+html body .app-shell:has(.radial-scrim) .refreshed-nav{z-index:320!important}
+#overlay-host{display:contents}
+@media(prefers-reduced-motion:reduce){.shared-backdrop{transition:none;backdrop-filter:none}}

@@ -1,3 +1,4 @@
+import {useOverlay,overlayHost} from "./ui/SharedBackdrop";
 import { motionDuration, OPEN_MS } from "./motion";
 import { sceneGust } from "./SceneTransition";
 import { useEffect, useRef, useState } from "react";
@@ -28,6 +29,7 @@ export default function EntryCategories({
     exit = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     held = useRef(false),
     trigger = useRef<HTMLButtonElement>(null);
+  useOverlay(orbit,500);
   const parent = s.categories.find((c) => c.id === main);
   const children = s.categories.filter(
     (c) =>
@@ -287,7 +289,7 @@ export default function EntryCategories({
             )}
             <small>แตะวงเพื่อเลือกได้เช่นกัน</small>
           </div>,
-          document.body,
+          overlayHost(),
         )}
     </div>
   );
